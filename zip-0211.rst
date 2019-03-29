@@ -35,7 +35,8 @@ Specification
 
 This specification details three potential approaches to integrating the features of Bolt into Zcash. 
 
-## 1. General requirements for Bolt protocol
+1. General requirements for Bolt protocol
+--------------------------
 
 Private payment channels as designed by the Bolt protocol require the following capabilities to achieve the stated anonymity properties at layer 2:
 
@@ -56,13 +57,12 @@ Private payment channels as designed by the Bolt protocol require the following 
 - Verify an output pays out to merchant immediately
 
 **Channel Operation Assumptions.**
-
 * Single-funded channel by customer with a minimum fee paid to the merchant.
 * Customer initiates the closing transaction. Or, merchant can broadcast a message to the customer node that requests for the customer to initiate closing.
 * If the customer initiates closing, then Merchant can dispute the closing transaction if it disagrees with the refund token in the closing transaction.
 
-## 2. Custom Shielded Tx: Using T/Z-addresses and Scripting Opcodes
-
+2. Custom Shielded Tx: Using T/Z-addresses and Scripting Opcodes
+-------------
 We assume the following specific features are present:
 (a) `OP_CLTV` - absolute lock time
 (b) nExpiryHeight - relative lock time
