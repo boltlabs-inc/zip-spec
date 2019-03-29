@@ -124,7 +124,7 @@ We assume the following features are present:
 
 **Note**: that we wrote this specification assuming P2WSH because this enables transaction non-malleability and allows unconfirmed transaction dependency chains. Another approach to transaction non-malleability would be acceptable.
 
-**Privacy Limitations**. With T-addresses, we give up the ability to hide the initial balance for the funding transaction and final balances when closing the channel. Channel opening and closing will be distinguishable on the network due to use of `OP_BOLT` opcodes.
+**Privacy Limitations**. With T-addresses, we give up the ability to hide the initial balance for the funding transaction and final balances when closing the channel. Channel opening and closing will be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
 
 4.1 Channel Opening
 -------------
@@ -198,9 +198,11 @@ The customer initiates channel closing by posting a closing transaction that spe
 Reference Implementation
 ========================
 
-TODO: include link to reference implementation: [Bolt Labs, Inc](https://github.com/boltlabs-inc).
+Current reference implementation for BOLT on a fork of Zcash: https://github.com/boltlabs-inc/zcash.
 
 References
 ==========
+
+.. [#RFC2119] `Key words for use in RFCs to Indicate Requirement Levels <https://tools.ietf.org/html/rfc2119>`_
 
 TODO: Add references to libbolt v1 protocol specification
