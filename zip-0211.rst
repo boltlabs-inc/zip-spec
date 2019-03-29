@@ -65,25 +65,25 @@ Private payment channels as designed by the Bolt protocol require the following 
 
 We assume the following specific features are present:
 
-(a) `OP_CLTV` - absolute lock time
-(b) `nExpiryHeight` - relative lock time
+(a) ``OP_CLTV`` - absolute lock time
+(b) ``nExpiryHeight`` - relative lock time
 (c) shielded address support
 (d) 2-of-2 multi-sig transparent address support (via P2SH)
 (e) Transaction non-malleability
-(f) `OP_BOLT` opcode: takes two inputs as argument (a mode and a serialized token) and outputs a `True` or `False` on the stack:
+(f) ``OP_BOLT`` opcode: takes two inputs as argument (an integer for mode and a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack:
 
- - Mode 1 (`OPEN`). The opcode expects a channel token and validates that the channel opening is correct. That is, validates that the opening of the initial wallet commitment specified with the customer’s channel token. 
- - Mode 2 (`CLOSE`). The opcode expects a channel closure token (with refund token and hash of wallet pub key for latest state embedded) as part of closing transaction. It validates the signature on the closure token first. Then, validates the refund token and verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, (2) the customer’s payout is timelocked (to allow for merchant dispute).
- - Mode 3 (`DISPUTE`). The opcode expects a revocation token. It validates the revocation token with respect to the wallet pub key posted by customer in closing transaction. If valid, then it means that the refund token will be invalidated.
+- Mode 1 (``OPEN``). The opcode expects a channel token and validates that the channel opening is correct. That is, validates that the opening of the initial wallet commitment specified with the customer’s channel token. 
+- Mode 2 (``CLOSE``). The opcode expects a channel closure token (with refund token and hash of wallet pub key for latest state embedded) as part of closing transaction. It validates the signature on the closure token first. Then, validates the refund token and verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, (2) the customer’s payout is timelocked (to allow for merchant dispute).
+- Mode 3 (``DISPUTE``). The opcode expects a revocation token. It validates the revocation token with respect to the wallet pub key posted by customer in closing transaction. If valid, then it means that the refund token will be invalidated.
 
 **Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. However, the identity of the participants will remain hidden.
-Channel opening and closing will be distinguishable on the network due to use of `OP_BOLT` opcodes.
+Channel opening and closing will be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
 
 2.1 Channel Opening
 -------------
 Alice and Bob initialize the channel by producing an initial wallet commitment from generating the channel tokens via the Establish protocol.
 
-Alice (as customer) and Bob create a funding transaction that spends ZEC from shielded addresses to a 2-of-2 multi-sig transparent address using a `pay-to-script-hash (P2SH)` output with a `pay-to-public-key-hash (P2PKH)` embedded inside the script. Here is what the funding transaction looks like when opening the channel.
+Alice (as customer) and Bob create a funding transaction that spends ZEC from shielded addresses to a 2-of-2 multi-sig transparent address using a pay-to-script-hash (P2SH) output with a `pay-to-public-key-hash (P2PKH)` embedded inside the script. Here is what the funding transaction looks like when opening the channel.
 
 2.2 Funding Transaction
 -------------
@@ -145,9 +145,11 @@ Once the funding transaction has been confirmed on the blockchain, Alice and Bob
 -------------
 The funding transaction is by default funded by only one participant, the customer. This transaction is a P2WSH segwit transaction. Here is a high-level of what the funding transaction would look like:
 
-	witness:      0 <channel-token> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
-	scriptSig:    (empty)
+"""
+	witness: 0 <channel-token> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
+	scriptSig: (empty)
 	scriptPubKey: 0 <32-byte-hash>
+"""
 
 This is a standard Segwit P2WSH transaction. Note that the witness and empty `scriptSig` are provided by a subsequent transaction that spends the funding transaction output. The `scriptPubKey` of the funding transaction indicates that a witness script should be provided with a given hash; the `witnessScript` (≤ 10,000 bytes) is popped off the initial witness stack of a spending transaction and the SHA256 of witnessScript must match the 32-byte hash of the following:
 
@@ -195,7 +197,7 @@ To spend this output, the merchant publishes a transaction with:
 
 4.4 Channel Closing
 -------------
-The customer initiates channel closing by posting a closing transaction that spends from the multi-signature address with a witness that satisfies the witnessScript and the `OP_BOLT` opcode: the refund token and the two transaction outputs to the customer (`txout[0]`) and merchant (`txout[1]`). Note that the refund token consists of (a) Mode ID: 2 and (2) a merchant signature on the latest wallet public key and the updated balance of the channel.  The customer’s transaction output is timelocked, while the merchant is able to spend immediately.
+The customer initiates channel closing by posting a closing transaction that spends from the multi-signature address with a witness that satisfies the witnessScript and the ``OP_BOLT`` opcode: the refund token and the two transaction outputs to the customer (``txout[0]``) and merchant (``txout[1]``). Note that the refund token consists of (a) Mode ID: 2 and (2) a merchant signature on the latest wallet public key and the updated balance of the channel.  The customer’s transaction output is timelocked, while the merchant is able to spend immediately.
 
 
 Reference Implementation
