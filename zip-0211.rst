@@ -14,12 +14,7 @@
 Terminology
 ===========
 
-The key words "MUST" and "MUST NOT" in this document are to be interpreted as described in RFC 2119. [#RFC2119]_
-
-The terms "branch" and "network upgrade" in this document are to be interpreted as described in ZIP 200. [#zip-0200]_
-
-The term "Sapling" in this document is to be interpreted as described in ZIP 205. [#zip-0205]_
-
+The key words "MUST" and "MUST NOT" in this document are to be interpreted as described in RFC 2119.
 
 Abstract
 ========
