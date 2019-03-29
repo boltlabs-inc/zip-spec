@@ -41,7 +41,7 @@ This specification details three potential approaches to integrating the feature
 Private payment channels as designed by the Bolt protocol require the following capabilities to achieve the stated anonymity properties at layer 2:
 
 1. Ability to create a funding transaction such that the transaction inputs are anonymous.
-2. Ability to escrow funds to a multi-signature address with transaction malleability fixed (so that refund tokens committed during channel opening remain spendable, even if the merchant alters his signature on the funding transaction). 
+2. Ability to escrow funds to a multi-signature address with a fix for transaction malleability.
 3. Ability to verify additional fields from the transaction inputs/outputs as part of signature verification.
 4. Ability to do relative time locks for commitment transactions to support unilateral channel closing.
 5. Ability to do absolute and relative time locks to support multi-hop payments.
@@ -66,15 +66,15 @@ Private payment channels as designed by the Bolt protocol require the following 
 We assume the following specific features are present:
 
 (a) `OP_CLTV` - absolute lock time
-(b) nExpiryHeight - relative lock time
-(b) shielded address support
-(c) 2-of-2 multi-sig transparent address support (via P2SH)
-(d) Transaction non-malleability
-(e) `OP_BOLT` opcode: takes two inputs as argument (a mode and a serialized token) and outputs a `True` or `False` on the stack:
+(b) `nExpiryHeight` - relative lock time
+(c) shielded address support
+(d) 2-of-2 multi-sig transparent address support (via P2SH)
+(e) Transaction non-malleability
+(f) `OP_BOLT` opcode: takes two inputs as argument (a mode and a serialized token) and outputs a `True` or `False` on the stack:
 
-  - Mode 1 (`OPEN`). The opcode expects a channel token and validates that the channel opening is correct. That is, validates that the opening of the initial wallet commitment specified with the customer’s channel token. 
-  - Mode 2 (`CLOSE`). The opcode expects a channel closure token (with refund token and hash of wallet pub key for latest state embedded) as part of closing transaction. It validates the signature on the closure token first. Then, validates the refund token and verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, (2) the customer’s payout is timelocked (to allow for merchant dispute).
-  - Mode 3 (`DISPUTE`). The opcode expects a revocation token. It validates the revocation token with respect to the wallet pub key posted by customer in closing transaction. If valid, then it means that the refund token will be invalidated.
+ - Mode 1 (`OPEN`). The opcode expects a channel token and validates that the channel opening is correct. That is, validates that the opening of the initial wallet commitment specified with the customer’s channel token. 
+ - Mode 2 (`CLOSE`). The opcode expects a channel closure token (with refund token and hash of wallet pub key for latest state embedded) as part of closing transaction. It validates the signature on the closure token first. Then, validates the refund token and verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, (2) the customer’s payout is timelocked (to allow for merchant dispute).
+ - Mode 3 (`DISPUTE`). The opcode expects a revocation token. It validates the revocation token with respect to the wallet pub key posted by customer in closing transaction. If valid, then it means that the refund token will be invalidated.
 
 **Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. However, the identity of the participants will remain hidden.
 Channel opening and closing will be distinguishable on the network due to use of `OP_BOLT` opcodes.
