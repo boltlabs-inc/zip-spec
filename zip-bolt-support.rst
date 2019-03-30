@@ -46,6 +46,7 @@ Private payment channels as designed by the Bolt protocol require the following 
  - check the validity of the commitment opening
  - check the validity of randomized/blinded signature on the wallet commitment in closure token
  - check the validity of revocation token signature in the event of a channel dispute by merchant
+ 
 7. Ability to verify the transaction output such that:
 
  - first output pays out to customer with a time lock
