@@ -243,8 +243,8 @@ This wallet commitement below is created first during channel initialization, bu
 	OP_ENDIF
 	OP_CHECKSIGVERIFY OP_BOLT
 
-  - ``to_merchant``: A P2WPKH to merch-pubkey output (sending funds back to the merchant), i.e.
-* ``scriptPubKey``: 0 <20-byte-key-hash of merch-pubkey>
+* ``to_merchant``: A P2WPKH to merch-pubkey output (sending funds back to the merchant), i.e.
+* ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
 
 Or, if a revoked commitment transaction is available, the merchant may spend the output with the above witness script and witness stack:
 
