@@ -7,7 +7,7 @@
   Credits: Ian Miers <imiers@z.cash?>
            Matthew Green <mgreen@z.cash>
   Category: Consensus
-  Created: 2019-03-29
+  Created: 2019-03-30
   License: MIT
 
 
@@ -230,9 +230,9 @@ This wallet commitement below is created first during channel initialization, bu
 * ``txouts``: 
 * ``to_customer``: a timelocked (using ``OP_CSV``) version-0 P2WSH output sending funds back to the customer. So scriptPubKey is of the form ``0 <32-byte-hash>``. A customer node may create a transaction spending this output with:
 
-  - nSequence: <time-delay>
-  - Witness: <refund-token> <cust-sig> 0 <witnessScript>
-  - Witness script:
+  - ``nSequence: <time-delay>``
+  - ``witness: <refund-token> <cust-sig> 0 <witnessScript>``
+  - ``witness script:``
   
 	OP_IF
 	  # Merchant can spend if revoked CT available
