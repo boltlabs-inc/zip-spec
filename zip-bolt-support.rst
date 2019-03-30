@@ -222,11 +222,14 @@ This wallet commitement below is created first during channel initialization, bu
 * ``groupid``: specify group id
 * ``locktime``: should be set such that the commitment can be included in current block 
 * ``txin`` count: 1
+
   - ``txin[0]`` outpoint: txid and outpoint _index of the funding transaction
   - ``txin[0]`` script bytes: 0
   - ``txin[0]`` witness: ``0 <channel-token> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>``
+
 * ``txouts``: 
-* ``to_customer``: a timelocked (using OP_CSV) version-0 P2WSH output sending funds back to the customer. So scriptPubKey is of the form 0 <32-byte-hash>. A customer node may create a transaction spending this output with:
+* ``to_customer``: a timelocked (using ``OP_CSV``) version-0 P2WSH output sending funds back to the customer. So scriptPubKey is of the form ``0 <32-byte-hash>``. A customer node may create a transaction spending this output with:
+
   - nSequence: <time-delay>
   - Witness: <refund-token> <cust-sig> 0 <witnessScript>
   - Witness script:
