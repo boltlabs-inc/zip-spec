@@ -122,7 +122,7 @@ where ``serializedScript`` is as follows:
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
 
-[
+[TODO: provide example transaction here.]
 
 2.3 Initial Wallet Commitment
 -------------
