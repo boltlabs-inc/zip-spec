@@ -43,14 +43,13 @@ Private payment channels as designed by the Bolt protocol require the following 
 5. Ability to do absolute and relative time locks to support multi-hop payments.
 6. Ability to validate Bolt-specific commitment opening message and closing signature:
 
-- check the validity of the commitment opening
-- check the validity of randomized/blinded signature on the wallet commitment in closure token
-- check the validity of revocation token signature in the event of a channel dispute by merchant
-
+ - check the validity of the commitment opening
+ - check the validity of randomized/blinded signature on the wallet commitment in closure token
+ - check the validity of revocation token signature in the event of a channel dispute by merchant
 7. Ability to verify the transaction output such that:
 
-- first output pays out to customer with a time lock
-- second output pays out to merchant immediately
+ - first output pays out to customer with a time lock
+ - second output pays out to merchant immediately
 
 **Channel Operation Assumptions.**
  - Single-funded channel by customer with a minimum fee paid to the merchant.
