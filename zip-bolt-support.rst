@@ -257,7 +257,7 @@ The customer initiates channel closing by posting a closing transaction that spe
 Reference Implementation
 ========================
 
-Currently working on a reference implementation for section 2 on a fork of Zcash here: https://github.com/boltlabs-inc/zcash. Will update fully working examples here.
+We are currently working on a reference implementation based on section 2 in a fork of Zcash here: https://github.com/boltlabs-inc/zcash.
 
 References
 ==========
