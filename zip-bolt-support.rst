@@ -7,7 +7,7 @@
   Credits: Ian Miers <imiers@z.cash?>
            Matthew Green <mgreen@z.cash>
   Category: Consensus
-  Created: 2019-03-25
+  Created: 2019-03-29
   License: MIT
 
 
@@ -85,7 +85,40 @@ Alice (as customer) and Bob create a funding transaction that spends ZEC from sh
 -------------
 The funding transaction is by default funded by only one participant, the customer. It could also be funded by the merchant. This transaction has 2 shielded inputs and 1 output to a P2SH address and makes use of Bech32 addresses:
 
-TBD
+* ``lock_time``: 0
+* ``nExpiryHeight``: 0
+* ``valueBalance``: ?
+* ``nShieldedSpend``: 1 or 2 (if funded by both customer and merchant)
+* ``vShieldedSpend[0]``: tx for customer’s note commitment and nullifier for the coins
+  
+  - ``cv``: commitment for the input note
+  - ``root``: root hash of note commitment tree at some block height
+  - ``nullifier``: unique serial number of the input note
+  - ``rk``: randomized pubkey for spendAuthSig
+  - ``zkproof``: zero-knowledge proof for the note
+  - ``spendAuthSig``: signature authorizing the spend
+* ``vShieldedSpend[1]``: tx for merchant’s note commitment and nullifier for the coins (if dual-funded)
+  
+  - ``cv``: commitment for the input note
+  - ``root``: root hash of note commitment tree at some block height
+  - ``nullifier``: unique serial number of the input note
+  - ``rk``: randomized pubkey for spendAuthSig
+  - ``zkproof``: zero-knowledge proof for the note
+  - ``spendAuthSig``: signature authorizing the spend
+* ``tx_out_count``: 1
+* ``tx_out``: (using a P2SH output)
+
+  - ``scriptPubKey`` must have the form 0 <32-byte hash>, where the latter is the hash of the script needed to spend the output.
+To redeem this output, the redeeming transaction must present:
+
+	scriptSig: 0 0 <channel-token> <channel-pubkey> <cust-sig> <merch-sig> <serializedScript>, 
+	
+where ``serializedScript`` is as follows: 
+	
+	2 <cust-pubkey> <merchant-pubkey> 2 OP_CHECKMULTISIGVERIFY 
+	OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT
+
+* ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
 
 2.3 Initial Wallet Commitment
 -------------
