@@ -80,7 +80,7 @@ Channel opening and closing will be distinguishable on the network due to use of
 -------------
 Alice and Bob initialize the channel by producing an initial wallet commitment from generating the channel tokens via the Establish protocol.
 
-Alice (as customer) and Bob create a funding transaction that spends ZEC from shielded addresses to a 2-of-2 multi-sig transparent address using a pay-to-script-hash (P2SH) output with a `pay-to-public-key-hash (P2PKH)` embedded inside the script. Here is what the funding transaction looks like when opening the channel.
+Alice (as customer) and Bob (as merchant) create a funding transaction that spends ZEC from shielded addresses to a 2-of-2 multi-sig transparent address using a pay-to-script-hash (P2SH) output with a `pay-to-public-key-hash (P2PKH)` embedded inside the script. Here is what the funding transaction looks like when opening the channel.
 
 2.2 Funding Transaction
 -------------
@@ -113,11 +113,11 @@ This transaction has (up to 2) shielded inputs and 1 output to a P2SH address (t
 * ``tx_out``: (using a P2SH address)
 
    - ``scriptPubKey`` must have the form ``0 <32-byte hash>``, where the latter is the hash of the script needed to spend the output.
-To redeem this output, the redeeming transaction must present:
+   To redeem this output, the redeeming transaction must present:
 
 	scriptSig: 0 0 <channel-token> <cust-sig> <merch-sig> <serializedScript>, 
 	
-where ``serializedScript`` is as follows: 
+   where ``serializedScript`` is as follows: 
 	
 	2 <cust-pubkey> <merchant-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT
 
