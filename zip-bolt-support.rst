@@ -4,7 +4,7 @@
   Title: Add support for Bolt protocol 
   Authors: J. Ayo Akinyele <ayo@boltlabs.io>
            Colleen Swanson <swan@boltlabs.io>
-  Credits: Ian Miers <imiers@z.cash?>
+  Credits: Ian Miers <imiers@z.cash>
            Matthew Green <mgreen@z.cash>
   Category: Consensus
   Created: 2019-03-30
@@ -24,7 +24,7 @@ This proposal specifies three possible approaches for integrating the blind off-
 Motivation
 ==========
 
-Layer 2 protocols like Lightning enable scalable payments for Bitcoin. We want to implement a similar protoocol on top of Lightninng such that we can build scalable and private payments on top of Zcash.
+Layer 2 protocols like Lightning enable scalable payments for Bitcoin. We want to implement a similar protoocol on top of Lightninng so that we can build scalable and private payments on top of Zcash.
 
 Specification
 =============
@@ -100,6 +100,7 @@ This transaction has 2 shielded inputs and 1 output to a P2SH address and makes 
   - ``rk``: randomized pubkey for spendAuthSig
   - ``zkproof``: zero-knowledge proof for the note
   - ``spendAuthSig``: signature authorizing the spend
+  
 * ``vShieldedSpend[1]``: tx for merchant’s note commitment and nullifier for the coins (if dual-funded)
   
   - ``cv``: commitment for the input note
@@ -175,14 +176,14 @@ We assume the following features are present:
 (a) ``OP_CLTV`` - absolute lock time
 (b) ``OP_CSV`` - relative lock time
 (c) 2-of-2 multi-sig transparent address support
-(d) Transaction non-malleability
+(d) Transaction non-malleability for t-addresses
 (e) ``OP_BOLT`` opcode: takes two inputs as argument (a mode and a serialized token) and outputs a `True` or `False` on the stack:
 
-- Mode 1 (``OPEN``). The opcode expects a channel token and validates that the channel opening is correct. That is, validates  that the opening of the initial wallet commitment specified with the customer’s channel token. 
+- Mode 1 (``OPEN``). The opcode expects a channel token and validates that the channel opening is correct. That is, validates the opening of the initial wallet commitment specified with the customer’s channel token.
 - Mode 2 (``CLOSE``). The opcode expects a channel closure token (with refund token and hash of wallet pub key for latest state embedded) as part of closing transaction. It validates the signature on the closure token first. Then, validates the refund token and verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, (2) the customer’s payout is timelocked (to allow for merchant dispute).
-- Mode 3 (``DISPUTE``). The opcode expects a revocation token. It validates the revocation token with respect to the wallet pub key posted by customer in closing transaction. If valid, then it means that the refund token will be invalidated.
+- Mode 3 (``DISPUTE``). The opcode expects a revocation token. It validates the revocation token with respect to the wallet pub key posted by customer in closing transaction. If valid, it means that the refund token will be invalidated.
 
-**Note**: that we wrote this specification assuming P2WSH because this enables transaction non-malleability and allows unconfirmed transaction dependency chains. Another approach to transaction non-malleability would be acceptable.
+**Note**: We assume P2WSH as it enforces transaction non-malleability and allows unconfirmed transaction dependency chains. Another approach to transaction non-malleability would be acceptable.
 
 **Privacy Limitations**. With T-addresses, we give up the ability to hide the initial balance for the funding transaction and final balances when closing the channel. Channel opening and closing will be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
 
@@ -198,14 +199,14 @@ Once the funding transaction has been confirmed on the blockchain, Alice and Bob
 
 4.2 Funding Transaction
 -------------
-The funding transaction is by default funded by only one participant, the customer. This transaction is a P2WSH segwit transaction. Here is a high-level of what the funding transaction would look like:
+The funding transaction is by default funded by only one participant, the customer. This transaction is a P2WSH SegWit transaction. Here is a high-level of what the funding transaction would look like:
 
 	witness: 0 <channel-token> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
 	
 	scriptSig: (empty)	
 	scriptPubKey: 0 <32-byte-hash>
 
-This is a standard Segwit P2WSH transaction. Note that the witness and empty ``scriptSig`` are provided by a subsequent transaction that spends the funding transaction output. The ``scriptPubKey`` of the funding transaction indicates that a witness script should be provided with a given hash; the ``witnessScript`` (≤ 10,000 bytes) is popped off the initial witness stack of a spending transaction and the SHA256 of witnessScript must match the 32-byte hash of the following:
+This is a standard SegWit P2WSH transaction. Note that the witness and empty ``scriptSig`` are provided by a subsequent transaction that spends the funding transaction output. The ``scriptPubKey`` of the funding transaction indicates that a witness script should be provided with a given hash; the ``witnessScript`` (≤ 10,000 bytes) is popped off the initial witness stack of a spending transaction and the SHA256 of witnessScript must match the 32-byte hash of the following:
 
 	2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY	
 	OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT
@@ -220,7 +221,7 @@ This wallet commitement below is created first during channel initialization, bu
 
 * ``version``: specify version number
 * ``groupid``: specify group id
-* ``locktime``: should be set such that the commitment can be included in current block 
+* ``locktime``: should be set so that the commitment can be included in current block 
 * ``txin`` count: 1
 
   - ``txin[0]`` outpoint: txid and outpoint _index of the funding transaction
@@ -256,7 +257,7 @@ To spend this output, the merchant publishes a transaction with:
 
 4.4 Channel Closing
 -------------
-The customer initiates channel closing by posting a closing transaction that spends from the multi-signature address with a witness that satisfies the witnessScript and the ``OP_BOLT`` opcode: the refund token and the two transaction outputs to the customer (``txout[0]``) and merchant (``txout[1]``). Note that the refund token consists of (a) Mode ID: 2 and (2) a merchant signature on the latest wallet public key and the updated balance of the channel.  The customer’s transaction output is timelocked, while the merchant is able to spend immediately.
+The customer initiates channel closing by posting a closing transaction that spends from the multi-signature address with a witness that satisfies the witnessScript and the ``OP_BOLT`` opcode: the refund token and the two transaction outputs to the customer (``txout[0]``) and merchant (``txout[1]``). Note that the refund token consists of (a) Mode ID: 2 and (b) a merchant signature on the latest wallet public key and the updated balance of the channel.  The customer’s transaction output is timelocked, while the merchant is able to spend immediately.
 
 
 Reference Implementation
