@@ -57,6 +57,14 @@ Private payment channels as designed by the Bolt protocol require the following 
  - Customer initiates the closing transaction. Or, merchant can broadcast a message to the customer node that requests for the customer to initiate closing.
  - If the customer initiates closing, then Merchant can dispute the closing transaction if it disagrees with the refund token in the closing transaction.
 
+1.1 Conditions for Opening Channel 
+-------------
+TODO: 
+
+1.2 Conditions for Closing Channel
+-------------
+TODO: 
+
 2. Transparent/Shielded Tx: Using T/Z-addresses and Scripting Opcodes
 -------------
 
