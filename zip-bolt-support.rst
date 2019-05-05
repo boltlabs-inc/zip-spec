@@ -60,11 +60,15 @@ Private payment channels as designed by the Bolt protocol require the following 
 
 1.1 Conditions for Opening Channel 
 -------------
-TODO: 
+ToDO
+To open a channel, a customer picks a channel-specific public key, commits to an initial wallet, and receives a signature from the merchant (using his long-term keypair) on that wallet. A wallet consists of a wallet-specific public key, a customer balance, and a total channel balance, and is linked to the customer's channel-specific public key.
+
+The cus
 
 1.2 Conditions for Closing Channel
 -------------
-TODO: 
+ToDO
+A customer should be able to close the channel by either opening the initial wallet commitment or posting a closing token
 
 2. Transparent/Shielded Tx: Using T/Z-addresses and Scripting Opcodes
 -------------
