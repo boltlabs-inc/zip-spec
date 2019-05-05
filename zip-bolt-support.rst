@@ -24,7 +24,7 @@ This proposal specifies three possible approaches for integrating the blind off-
 Motivation
 ==========
 
-Layer 2 protocols like Lightning enable scalable payments for Bitcoin. We want to implement a similar protoocol on top of Lightninng so that we can build scalable and private payments on top of Zcash.
+Layer 2 protocols like Lightning enable scalable payments for Bitcoin. We want to implement a similar, privacy-preserving layer 2 protocol on top of Zcash.
 
 Specification
 =============
@@ -54,8 +54,9 @@ Private payment channels as designed by the Bolt protocol require the following 
 
 **Channel Operation Assumptions.**
  - Single-funded channel by customer with a minimum fee paid to the merchant.
- - Customer initiates the closing transaction. Or, merchant can broadcast a message to the customer node that requests for the customer to initiate closing.
- - If the customer initiates closing, then Merchant can dispute the closing transaction if it disagrees with the refund token in the closing transaction.
+ - Either the customer or the merchant can initiate channel closing.
+ - If the customer initiates closing, then the merchant can dispute the closing transaction if it disagrees with the refund token in the closing transaction.
+ - If the merchant initiates closing, the customer has the opportunity to post her own valid closing transaction. In this case, the merchant has an additional opportunity to validate this closing transaction and can dispute if necessary.
 
 1.1 Conditions for Opening Channel 
 -------------
