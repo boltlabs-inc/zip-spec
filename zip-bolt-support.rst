@@ -128,11 +128,11 @@ This transaction has (up to 2) shielded inputs and 1 output to a P2SH address (t
 
 To redeem this output, the redeeming transaction must present:
 
-	scriptSig: 0 0 <channel-token> <cust-sig> <merch-sig> <serializedScript>, 
+	scriptSig: 0 <channel-token> <cust-sig> <merch-sig> <serializedScript>, 
 	
 where ``serializedScript`` is as follows: 
 	
-	2 <cust-pubkey> <merchant-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT
+	2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
 
@@ -151,7 +151,7 @@ The customer's commitment transaction is described below.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <channel-token> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
+   - ``txin[0]`` script sig: 0 <channel-token> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY>
 
 * ``txout`` count: 2
 * ``txouts``: 
@@ -167,7 +167,8 @@ The customer's commitment transaction is described below.
 		OP_ELSE
 		  <time-delay> OP_CSV OP_DROP <cust-pubkey>
 		OP_ENDIF
-		OP_CHECKSIGVERIFY OP_BOLT
+		OP_CHECKSIGVERIFY 
+		OP_BOLT
 		
   * ``to_merchant``: A P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
       * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
@@ -176,18 +177,19 @@ Note that after each payment on the channel, the customer obtains a closing toke
 
 2.4 Channel Closing
 -------------
-To close the channel, the customer can initiate by posting most recent commitment transaction that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode. This consists of a closing token (e.g., blind signature on the most recent wallet and channel tokens) or validation of the initial wallet commitment (if there were no payments on the channel).
+To close the channel, the customer can initiate by posting most recent commitment transaction that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode. This consists of a closing token (e.g., blind signature on the most recent wallet) or validation of the initial wallet commitment (if there were no payments on the channel).
 
-* version: 2
-* locktime: 0
-* txin count: 1
-   * `txin[0]` outpoint: `txid` and `output_index` from `funding_created` message
-   * `txin[0]` sequence: 0xFFFFFFFF
-   * `txin[0]` script bytes: 0
-   * `txin[0]` script sig: `0 1 <closing-token> <cust-sig> <merch-sig>`
-* txout count: 0, 1 or 2
-   * `txout` amount: final balance to be paid to one node (minus `fee_satoshis` from `closing_signed`, if this peer funded the channel)
-   * `txout` script: as specified in that node's `scriptpubkey` when shutting down the channel
+* ``version``: 2
+* ``groupid``: specify group id
+* ``locktime``: 0
+* ``txin`` count: 1
+   * ``txin[0]`` outpoint: `txid` and `output_index` from `funding_created` message
+   * ``txin[0]`` sequence: 0xFFFFFFFF
+   * ``txin[0]`` script bytes: 0
+   * ``txin[0]`` script sig: `0 1 <closing-token> <cust-sig> <merch-sig>`
+* ``txout`` count: 0, 1 or 2
+   * ``txout`` amount: final balance to be paid to one node (minus `fee_satoshis` from `closing_signed`, if this peer funded the channel)
+   * ``txout`` script: as specified in that node's `scriptpubkey` when shutting down the channel
 
 Once the timeout has been reached, the customer can spend with a separate transaction from the commitment transaction to a shielded output. **TODO**: add bit about spending from closing transaction after timeout to a shielded address. Merchant can do the same.
 
@@ -278,7 +280,7 @@ This wallet commitement below is created first during channel initialization, bu
 * ``to_customer``: a timelocked (using ``OP_CSV``) version-0 P2WSH output sending funds back to the customer. So scriptPubKey is of the form ``0 <32-byte-hash>``. A customer node may create a transaction spending this output with:
 
   - ``nSequence: <time-delay>``
-  - ``witness: <refund-token> <cust-sig> 0 <witnessScript>``
+  - ``witness: <closing-token> <cust-sig> 0 <witnessScript>``
   - ``witness script:``
   
 	OP_IF
