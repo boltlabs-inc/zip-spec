@@ -82,13 +82,13 @@ We assume the following specific features are present:
 (e) Transaction non-malleability
 (f) ``OP_BOLT`` opcode: takes two inputs as argument (an integer for mode and a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack:
 
-- Mode 1 (for close without any payments). The opcode expects a channel token and validates the channel opening. That is, verifies the opening of the initial wallet commitment specified with the customer’s channel token.
+- Mode 1 (for close without any channel payments). The opcode expects a channel token and validates the channel opening. That is, verifies the opening of the initial wallet commitment specified with the customer’s channel token.
 
 - Mode 2 (for unilateral closing). The opcode expects a channel closure token (with blind signature for transaction and hash of wallet pub key for latest state embedded) as part of closing transaction. It validates the signature on the closure token first. Then, validates the blind signature for closing token and verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, (2) the customer’s payout is timelocked (to allow for merchant dispute).
 
 - Mode 3 (for dispute). The opcode expects a revocation token. It validates the revocation token with respect to the wallet pub key posted by customer in closing transaction. If valid, then it means that the refund token will be invalidated.
 
-**Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final spliting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
+**Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final spliting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of the ``OP_BOLT`` opcode.
 
 2.1 Channel Opening
 -------------
@@ -136,7 +136,6 @@ where ``serializedScript`` is as follows:
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
 
-The locking script can only be unlocked if the customer signature and closure token are provided in addition to the hash of the channel token matches. The ``OP_BOLT`` opcode validates the opening of the wallet commitment with respect to the channel public key and transaction output then returns true on the script stack if it is a valid pedersen commitment.
 
 2.3 Initial Wallet Commitment
 -------------
