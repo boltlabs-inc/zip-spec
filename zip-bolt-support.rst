@@ -227,11 +227,7 @@ We assume the following features are present:
 (b) ``OP_CSV`` - relative lock time
 (c) 2-of-2 multi-sig transparent address support
 (d) Transaction non-malleability for t-addresses
-(e) ``OP_BOLT`` opcode: takes two inputs as argument (a mode and a serialized token) and outputs a `True` or `False` on the stack:
-
-- Mode 1 (``OPEN``). The opcode expects a channel token and validates that the channel opening is correct. That is, validates the opening of the initial wallet commitment specified with the customer’s channel token.
-- Mode 2 (``CLOSE``). The opcode expects a channel closure token (with refund token and hash of wallet pub key for latest state embedded) as part of closing transaction. It validates the signature on the closure token first. Then, validates the refund token and verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, (2) the customer’s payout is timelocked (to allow for merchant dispute).
-- Mode 3 (``DISPUTE``). The opcode expects a revocation token. It validates the revocation token with respect to the wallet pub key posted by customer in closing transaction. If valid, it means that the refund token will be invalidated.
+(e) ``OP_BOLT`` opcode: takes two inputs as argument (a mode and a serialized token) and outputs a `True` or `False` on the stack. Same description from Section 2.
 
 **Note**: We assume P2WSH as it enforces transaction non-malleability and allows unconfirmed transaction dependency chains. Another approach to transaction non-malleability would be acceptable.
 
@@ -319,5 +315,3 @@ References
 ==========
 
 .. [#RFC2119] `Key words for use in RFCs to Indicate Requirement Levels <https://tools.ietf.org/html/rfc2119>`_
-
-TODO: Add references to BOLT v2 protocol specification
