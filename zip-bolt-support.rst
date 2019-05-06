@@ -82,7 +82,7 @@ We assume the following specific features are present:
 (e) Transaction non-malleability
 (f) ``OP_BOLT`` opcode: takes two inputs as argument (an integer for mode and a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack:
 
-- Mode 1 (for close without any payments). The opcode expects a channel token and validates the channel opening. That is, verifies the opening of the initial wallet commitment specified with the customer’s channel token.
+- Mode 1 (for close without any channel payments). The opcode expects a channel token and validates the channel opening. That is, verifies the opening of the initial wallet commitment specified with the customer’s channel token.
 
 - Mode 2 (for unilateral closing). The opcode expects a channel closure token (with blind signature for transaction and hash of wallet pub key for latest state embedded) as part of closing transaction. It validates the signature on the closure token first. Then, validates the blind signature for closing token and verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, (2) the customer’s payout is timelocked (to allow for merchant dispute).
 
