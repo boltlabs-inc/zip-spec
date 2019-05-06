@@ -220,7 +220,8 @@ We assume the following features are present:
 (c) 2-of-2 multi-sig shielded address support
 (d) All inputs/outputs are specified from/to a shielded address
 (e) A method to encumber the outputs of a shielded transaction
-(f) An extension to the transaction format to include BOLT
+(f) An extension to the transaction format to include BOLT (e.g., like ``vBoltDescription``)
+(g) Extend the ``SIGHASH`` flags to cover the extended field
 
 The goal here is to perform all the same validation steps for channel opening/closing without relying on the scripting system, as well as allowing for relative timelocks (the equivalent of ``OP_CSV``). In order to support multihop payments, we need absolute timelocks as well (the equivalent of ``OP_CLTV``). We also want to ensure that transactions are non-malleable in order to allow for unconfirmed dependency transaction chains.
 
@@ -234,17 +235,15 @@ The customer creates a funding transaction that spends ZEC from a shielded addre
 -------------
 The funding transaction is by default funded by only one participant, the customer. It could also be funded by the merchant. 
 
-This transaction has (up to 2) shielded inputs and 1 output to a 2-of-2 shielded address with the merchant public key:
-
-[TODO: add approx funding tx example here. ]
+This transaction has (up to 2) shielded inputs and 1 output to a 2-of-2 shielded address with the merchant public key. If an ``vBoltDescription`` field is added, then we could use it to store the channel parameters and the channel token for opening the channel.
 
 3.3 Initial Wallet Commitment
 -------------
-**TODO**: explain at a high-level how this would work -- add questions
+The initial wallet commitment will spend from the shielded address to two outputs: a P2SH output (for customer) and P2PKH (for merchant).  The first output pays the customer with a timelock (or merchant with a revocation token) and the second output allows the merchant to spend immediately. It is not clear to us whether it will be possible to encumber the outputs of shielded outputs directly. We would appreciate feedback on the possibilities with commitment transactions as shielded transactions.
 
 3.4. Channel Closing
 -------------
-**TODO**: explain at a high-level how this would work -- add questions
+The channel closing consists of broadcasting the most recent commitment transaction and requires that the customer presents the closing token necessary to claim the funds.
 
 4. Bitcoin Compatible: Using T-address and Scripting Opcodes
 -------------
