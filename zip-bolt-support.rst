@@ -61,16 +61,14 @@ Private payment channels as designed by the Bolt protocol require the following 
 1.1 Conditions for Opening Channel 
 -------------
 
-To open a channel, a customer picks a channel-specific public key, commits to an initial wallet, and receives a signature from the merchant (using his long-term keypair) on that wallet. A wallet consists of a wallet-specific public key, a customer balance, and a total channel balance, and is linked to the customer's channel-specific public key.
-
-The cus
+To open a channel, a customer picks a channel-specific public key, commits to an initial wallet, and receives a signature from the merchant (using his long-term keypair) on that wallet. A wallet consists of a wallet-specific public key, a customer balance, and a total channel balance, and is linked to the customer's channel-specific public key. The channel specific public key, customer balance and initial wallet commitment comprise the customer's channel token.
 
 1.2 Conditions for Closing Channel
 -------------
 
-A customer should be able to close the channel by either opening the initial wallet commitment or posting a closing token.
+A customer should be able to close the channel by either opening the initial wallet commitment (if no payments made) or posting a closing token.
 
-A merchant should be able to close the channel by posting their closing token or revocation signature if they disagree with the state posted by the customer.
+A merchant should be able to close the channel by posting their closing token or revocation signature if the customer posts an earlier state of the closure token.
 
 2. Transparent/Shielded Tx: Using T/Z-addresses and Scripting Opcodes
 -------------
@@ -84,23 +82,23 @@ We assume the following specific features are present:
 (e) Transaction non-malleability
 (f) ``OP_BOLT`` opcode: takes two inputs as argument (an integer for mode and a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack:
 
-- Mode 1 (``OPEN``). The opcode expects a channel token and validates that the channel opening is correct. That is, validates that the opening of the initial wallet commitment specified with the customer’s channel token. 
-- Mode 2 (``CLOSE``). The opcode expects a channel closure token (with refund token and hash of wallet pub key for latest state embedded) as part of closing transaction. It validates the signature on the closure token first. Then, validates the refund token and verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, (2) the customer’s payout is timelocked (to allow for merchant dispute).
-- Mode 3 (``DISPUTE``). The opcode expects a revocation token. It validates the revocation token with respect to the wallet pub key posted by customer in closing transaction. If valid, then it means that the refund token will be invalidated.
+- Mode 1 (for close without any payments). The opcode expects a channel token and validates the channel opening. That is, verifies the opening of the initial wallet commitment specified with the customer’s channel token.
+
+- Mode 2 (for unilateral closing). The opcode expects a channel closure token (with blind signature for transaction and hash of wallet pub key for latest state embedded) as part of closing transaction. It validates the signature on the closure token first. Then, validates the blind signature for closing token and verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, (2) the customer’s payout is timelocked (to allow for merchant dispute).
+
+- Mode 3 (for dispute). The opcode expects a revocation token. It validates the revocation token with respect to the wallet pub key posted by customer in closing transaction. If valid, then it means that the refund token will be invalidated.
 
 **Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final spliting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
 
 2.1 Channel Opening
 -------------
-Alice and Bob initialize the channel by producing an initial wallet commitment from generating the channel tokens via the Establish protocol.
-
-Alice (as customer) and Bob (as merchant) create a funding transaction that spends ZEC from shielded addresses to a 2-of-2 multi-sig transparent address using a pay-to-script-hash (P2SH) output with a `pay-to-public-key-hash (P2PKH)` embedded inside the script. Here is what the funding transaction looks like when opening the channel.
+The customer creates a funding transaction that spends ZEC from a shielded address to a 2-of-2 multi-sig transparent address using a pay-to-script-hash (P2SH) output with a `pay-to-public-key-hash (P2PKH)` embedded inside the script. Here is what the funding transaction looks like when opening the channel.
 
 2.2 Funding Transaction
 -------------
 The funding transaction is by default funded by only one participant, the customer. It could also be funded by the merchant. 
 
-This transaction has (up to 2) shielded inputs and 1 output to a P2SH address (to a 2-of-2 multi-sig address):
+This transaction has (up to 2) shielded inputs and 1 output to a P2SH address (to a 2-of-2 multi-sig address) with the merchant public key:
 
 * ``lock_time``: 0
 * ``nExpiryHeight``: 0
@@ -138,7 +136,7 @@ where ``serializedScript`` is as follows:
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
 
-The locking script can only be unlocked if signatures are provided and the hash of the channel token matches. The serialized channel token consists of the initial wallet commitment for the channel and the channel parameters. The ``OP_BOLT`` opcode validates the opening of the wallet commitment with respect to the channel public key and transaction output then returns true on the script stack if it is a valid pedersen commitment.
+The locking script can only be unlocked if the customer signature and closure token are provided in addition to the hash of the channel token matches. The ``OP_BOLT`` opcode validates the opening of the wallet commitment with respect to the channel public key and transaction output then returns true on the script stack if it is a valid pedersen commitment.
 
 2.3 Initial Wallet Commitment
 -------------
@@ -168,7 +166,7 @@ The initial commitment transaction is generated by the customer during the chann
 	  # Customer must wait 
 	  <time-delay> OP_CSV OP_DROP <customer-pubkey>
 	OP_ENDIF
-	OP_CHECKSIGVERIFY OP_BOLT
+	OP_CHECKSIGVERIFY
 
  * ``to_merchant``: A P2WPKH to merch-pubkey output (sending funds back to the merchant), i.e.
    * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
