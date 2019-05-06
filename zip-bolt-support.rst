@@ -218,7 +218,7 @@ We assume the following features are present:
 (a) ``lock_time`` - for absolute lock time
 (b) A way to enforce relative lock time
 (c) 2-of-2 multi-sig shielded address support
-(d) Inputs come from a shielded address and outputs to a shielded address
+(d) All inputs/outputs are specified from/to a shielded address
 (e) A method to encumber the outputs of a shielded transaction
 (f) An extension to the transaction format to include BOLT
 
@@ -228,7 +228,7 @@ The goal here is to perform all the same validation steps for channel opening/cl
 
 3.1 Channel Opening
 -------------
-The customer creates a funding transaction that spends ZEC from a shielded address to a 2-of-2 multi-sig shielded address. Here is the flow (1) creating musig shielded address specifying both pub keys, and (2) generating channel tokens
+The customer creates a funding transaction that spends ZEC from a shielded address to a 2-of-2 multi-sig shielded address. Here is the flow (1) creating musig shielded address specifying both parties keys and (2) generating channel tokens.
 
 3.2 Funding Transaction
 -------------
