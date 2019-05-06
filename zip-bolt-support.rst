@@ -155,22 +155,22 @@ The customer's commitment transaction is described below.
 
 * ``txout`` count: 2
 * ``txouts``: 
- * ``to_customer``: a timelocked (using ``OP_CSV``) version-0 P2SH output sending funds back to the customer. So ``scriptPubKey`` is of the form ``0 <32-byte-hash>``.
 
-  - ``nSequence: <time-delay>``
-  - ``script sig: <closing-token> <cust-sig> 0 <serializedScript>``
-  - ``serialized script:``
-
-	OP_IF
-	  # Merchant can spend if revoked CT available
-	  OP_2 <revocation-pubkey> <merch-pubkey> OP_2   
-	OP_ELSE
-	  # Customer must wait 
-	  <time-delay> OP_CSV OP_DROP <customer-pubkey>
-	OP_ENDIF
-	OP_CHECKSIGVERIFY
-
+  * ``to_customer``: a timelocked (using ``OP_CSV``) version-0 P2SH output sending funds back to the customer. So ``scriptPubKey`` is of the form ``0 <32-byte-hash>``.
+  
+      - ``nSequence: <time-delay>``
+      - ``script sig: <closing-token> <cust-sig> 0 <serializedScript>``
+      - ``serialized script:``
+      
+		OP_IF		  
+	  	  OP_2 <revocation-pubkey> <merch-pubkey> OP_2   
+		OP_ELSE
+		  <time-delay> OP_CSV OP_DROP <customer-pubkey>
+		OP_ENDIF
+		OP_CHECKSIGVERIFY
+		
  * ``to_merchant``: A P2WPKH to merch-pubkey output (sending funds back to the merchant), i.e.
+ 
    * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
 
 Note that after each payment on the channel, the customer obtains a closing token for the updated channel balance  and provides the merchant a revocation token for the previous state along with the associated wallet public key. The merchant can use the revocation to spend the funds of the channel if the customer posts an incorrect commitment transaction.
