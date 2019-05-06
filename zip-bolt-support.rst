@@ -213,10 +213,12 @@ Once the timeout has been reached, the customer can post a transaction that clai
 
 3. Custom Shielded Tx: Using Z-addresses and Scriptless
 -------------
+**TODO**: Need feedback on whether this is actually feasible.
+
 We assume the following features are present:
 
 (a) ``lock_time`` - for absolute lock time
-(b) ``nExpiryHeight`` - for relative lock time
+(b) A way to enforce relative lock time
 (c) 2-of-2 multi-sig shielded address support
 (d) Inputs come from a shielded address and outputs to a shielded address
 (e) A method to encumber the outputs of a shielded transaction
@@ -224,7 +226,23 @@ We assume the following features are present:
 
 The goal here is to perform all the same validation steps for channel opening/closing without relying on the scripting system, as well as allowing for relative timelocks (the equivalent of ``OP_CSV``). In order to support multihop payments, we need absolute timelocks as well (the equivalent of ``OP_CLTV``). We also want to ensure that transactions are non-malleable in order to allow for unconfirmed dependency transaction chains.
 
-**TODO**: Need feedback on whether this is actually feasible.
+**Privacy Limitations**: With custom transaction extensions to Zcash, it may be evident whenever parties are establishing a payment channel.
+
+3.1 Channel Opening
+-------------
+**TODO**: explain at a high-level how this would work -- add your questions
+
+3.2 Funding Transaction
+-------------
+**TODO**: explain at a high-level how this would work -- add your questions
+
+3.3 Initial Wallet Commitment
+-------------
+**TODO**: explain at a high-level how this would work -- add your questions
+
+3.4. Channel Closing
+-------------
+**TODO**: explain at a high-level how this would work -- add your questions
 
 4. Bitcoin Compatible: Using T-address and Scripting Opcodes
 -------------
