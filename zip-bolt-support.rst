@@ -151,23 +151,23 @@ The customer's commitment transaction is described below.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <channel-token> <cust-sig> <merch-sig> <2 <cust_pubkey> <merch_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
+   - ``txin[0]`` script sig: 0 <channel-token> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
 
 * ``txout`` count: 2
 * ``txouts``: 
 
   * ``to_customer``: a timelocked (using ``OP_CSV``) P2SH output sending funds back to the customer. So ``scriptPubKey`` is of the form ``0 <32-byte-hash>``.  
-      
+      - ``amount``: balance paid back to customer
       - ``nSequence: <time-delay>``
-      - ``script sig: <closing-token> <cust-sig> 0 <serializedScript>``
+      - ``script sig: 1 <closing-token> <cust-sig> 0 <serializedScript>``
       - ``serializedScript``:
       
 		OP_IF		  
 	  	  OP_2 <revocation-pubkey> <merch-pubkey> OP_2   
 		OP_ELSE
-		  <time-delay> OP_CSV OP_DROP <customer-pubkey>
+		  <time-delay> OP_CSV OP_DROP <cust-pubkey>
 		OP_ENDIF
-		OP_CHECKSIGVERIFY
+		OP_CHECKSIGVERIFY OP_BOLT
 		
   * ``to_merchant``: A P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
       * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
@@ -176,7 +176,7 @@ Note that after each payment on the channel, the customer obtains a closing toke
 
 2.4 Channel Closing
 -------------
-To close the channel, the customer can initiate by posting most recent commitment transaction that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode. This consists of a closing token (e.g., blind signature on the most recent wallet) and channel tokens) or an initial wallet commitment (if there are no payments on the channel). 
+To close the channel, the customer can initiate by posting most recent commitment transaction that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode. This consists of a closing token (e.g., blind signature on the most recent wallet and channel tokens) or validation of the initial wallet commitment (if there were no payments on the channel).
 
 * version: 2
 * locktime: 0
@@ -184,7 +184,7 @@ To close the channel, the customer can initiate by posting most recent commitmen
    * `txin[0]` outpoint: `txid` and `output_index` from `funding_created` message
    * `txin[0]` sequence: 0xFFFFFFFF
    * `txin[0]` script bytes: 0
-   * `txin[0]` script sig: `0 0 <channel-token> <closing-token> <signature_for_pubkey1> <signature_for_pubkey2>`
+   * `txin[0]` script sig: `0 1 <closing-token> <cust-sig> <merch-sig>`
 * txout count: 0, 1 or 2
    * `txout` amount: final balance to be paid to one node (minus `fee_satoshis` from `closing_signed`, if this peer funded the channel)
    * `txout` script: as specified in that node's `scriptpubkey` when shutting down the channel
@@ -200,6 +200,8 @@ Once the timeout has been reached, the customer can spend with a separate transa
    - ``encCiphertext``: encrypted output note (part 1)
    - ``outCiphertext``: encrypted output note (part 2)
    - ``zkproof``: zero-knowledge proof for the note
+
+TODO: revisit the logic here. Not quite clear on how to build custom shielded tx outside of the zcash RPC interface. Need a way to encumber shielded outputs. Ideas?
 
 
 3. Custom Shielded Tx: Using Z-addresses and Scriptless
