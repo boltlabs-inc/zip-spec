@@ -200,9 +200,9 @@ Once the timeout has been reached, the customer can post a transaction that clai
    * ``txin[0]`` outpoint: ``txid`` and ``output_index``
    * ``txin[0]`` sequence: 0xFFFFFFFF
    * ``txin[0]`` script bytes: 0
-   * ``txin[0]`` script sig: `0 1 <closing-token> <cust-sig> <merch-sig>`
+   * ``txin[0]`` script sig: ``0 1 <closing-token> <cust-sig> <merch-sig>``
 * ``nShieldedOutput``: 1
-* ``vShieldedOutput[0]``: 
+* ``vShieldedOutput[0]``:
    - ``cv``: commitment for the output note
    - ``cmu``: ...
    - ``ephemeralKey``:ephemeral public key
@@ -213,8 +213,6 @@ Once the timeout has been reached, the customer can post a transaction that clai
 
 3. Custom Shielded Tx: Using Z-addresses and Scriptless
 -------------
-**TODO**: Need feedback on whether this is actually feasible.
-
 We assume the following features are present:
 
 (a) ``lock_time`` - for absolute lock time
@@ -226,23 +224,27 @@ We assume the following features are present:
 
 The goal here is to perform all the same validation steps for channel opening/closing without relying on the scripting system, as well as allowing for relative timelocks (the equivalent of ``OP_CSV``). In order to support multihop payments, we need absolute timelocks as well (the equivalent of ``OP_CLTV``). We also want to ensure that transactions are non-malleable in order to allow for unconfirmed dependency transaction chains.
 
-**Privacy Limitations**: With custom transaction extensions to Zcash, it may be evident whenever parties are establishing a payment channel.
+**Limitations/Notes**: With extensions to shielded transaction format, it may be evident whenever parties are establishing private payment channels. We appreciate feedback on the feasibility of what is proposed for each aspect of the Bolt protocol.
 
 3.1 Channel Opening
 -------------
-**TODO**: explain at a high-level how this would work -- add your questions
+The customer creates a funding transaction that spends ZEC from a shielded address to a 2-of-2 multi-sig shielded address. Here is the flow (1) creating musig shielded address specifying both pub keys, and (2) generating channel tokens
 
 3.2 Funding Transaction
 -------------
-**TODO**: explain at a high-level how this would work -- add your questions
+The funding transaction is by default funded by only one participant, the customer. It could also be funded by the merchant. 
+
+This transaction has (up to 2) shielded inputs and 1 output to a 2-of-2 shielded address with the merchant public key:
+
+[TODO: add approx funding tx example here. ]
 
 3.3 Initial Wallet Commitment
 -------------
-**TODO**: explain at a high-level how this would work -- add your questions
+**TODO**: explain at a high-level how this would work -- add questions
 
 3.4. Channel Closing
 -------------
-**TODO**: explain at a high-level how this would work -- add your questions
+**TODO**: explain at a high-level how this would work -- add questions
 
 4. Bitcoin Compatible: Using T-address and Scripting Opcodes
 -------------
