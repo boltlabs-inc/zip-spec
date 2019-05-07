@@ -223,6 +223,7 @@ The merchant can immediately claim the ``to_merchant'' output from the customer 
    - ``zkproof``: zero-knowledge proof for the note
 
 ***What is the above tx for****
+
 3. Custom Shielded Tx: Using Z-addresses and Scriptless
 -------------
 We assume the following features are present:
