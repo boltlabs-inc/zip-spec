@@ -134,7 +134,7 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
 
 To redeem this output, the redeeming transaction must present:
 
-	scriptSig: 0 <mode> <<closing-token> <channel-token> or <rev-token>> <cust-sig> <merch-sig> <serializedScript>, 
+	scriptSig: 0 <mode> <<channel-token> <closing-token> or <rev-token>> <cust-sig> <merch-sig> <serializedScript>, 
 	
 where ``serializedScript`` is as follows: 
 	
@@ -157,7 +157,7 @@ The customer's commitment transaction is described below.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <mode> <<closing-token> <channel-token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
+   - ``txin[0]`` script sig: 0 <mode> <<channel-token> <closing-token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
 
 * ``txout`` count: 2
 * ``txouts``: 
