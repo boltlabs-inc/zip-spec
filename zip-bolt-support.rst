@@ -49,8 +49,8 @@ Private payment channels as designed by the Bolt protocol require the following 
  
 (7) Ability to verify the transaction output such that:
 
-- first output pays out to customer with a time lock
-- second output pays out to merchant immediately
+- if customer initiated closing, first output pays out to customer with a time lock and second output pays out to merchant immediately 
+- if merchant initiated closing, a single output that pays the merchant the full balance of the channel with a time lock that allows for customer dispute
 
 **Channel Operation Assumptions.**
  - Single-funded channel by customer with a minimum fee paid to the merchant.
@@ -82,7 +82,7 @@ We assume the following specific features are present:
 (3) shielded address support
 (4) 2-of-2 multi-sig transparent address support (via P2SH)
 (5) Transaction non-malleability
-(6) ``OP_BOLT`` opcode: takes two inputs as argument (an integer for mode and a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack: ***is it still correct to talk about 2 inputs here***
+(6) ``OP_BOLT`` opcode: takes two inputs as argument (an integer for mode and a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack: 
 
 * Mode 1 (for customer close). This mode expects a channel token and a customer closure token of one of the following types:
   (a) An opening of the channel's initial wallet commitment. This type of closure token is to be used when no payments have been made on the specified channel. The opcode verifies that the provided commitment opening is valid with respect to the specified channel.
@@ -91,8 +91,6 @@ We assume the following specific features are present:
 * Mode 2 (for merchant-initiated close). This mode expects a channel token and a merchant closure token, which is signed using the customer's channel-specific public key. The opcode validates the customer signature on the provided closure token and verifies that the closing transaction contains a timelocked output paying the total channel balance to the merchant. The output must be timelocked to allow for the customer to post her own closing transaction with a different split of channel funds.
 
 * Mode 3 (for merchant dispute of customer closure token). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
-
-***Do we need the above modes to check the other condition for outputs to be paid out, i.e. immediately with merchant rev.***
 
 **Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final spliting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
 
@@ -104,7 +102,7 @@ The customer creates a funding transaction that spends ZEC from a shielded addre
 -------------
 The funding transaction is by default funded by only one participant, the customer.  
 
-This transaction has (up to 2) shielded inputs ***Why only 2 shielded inputs? can't customer fund from multiple addresses*** and 1 output to a P2SH address (to a 2-of-2 multi-sig address) with a the merchant public key: ***What keypairs are actually used here? Are we assuming the same signature scheme that supports blind sigs for these addresses***
+This transaction has 2 shielded inputs (can be up to some N) and 1 output to a P2SH address (to a 2-of-2 multi-sig address) with a the merchant public key. Note that the customer can specify as many shielded inputs to fund the channel sufficiently (limited only by the overall transaction size).
 
 * ``lock_time``: 0
 * ``nExpiryHeight``: 0
