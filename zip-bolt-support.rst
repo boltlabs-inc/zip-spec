@@ -296,19 +296,15 @@ Once the funding transaction has been confirmed on the blockchain, Alice and Bob
 -------------
 The funding transaction is by default funded by only one participant, the customer. This transaction is a P2WSH SegWit transaction. Here is a high-level of what the funding transaction would look like:
 
-	witness: 0 <channel-token> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
+	witness: 0 <mode> <<channel-token> <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
 	
 	scriptSig: (empty)	
 	scriptPubKey: 0 <32-byte-hash>
 
-This is a standard SegWit P2WSH transaction. Note that the witness and empty ``scriptSig`` are provided by a subsequent transaction that spends the funding transaction output. ***It's really confusing to include the witness like this, since the witness in the funding transaction itself is actually empty*** The ``scriptPubKey`` of the funding transaction indicates that a witness script should be provided with a given hash; the ``witnessScript`` (≤ 10,000 bytes) is popped off the initial witness stack of a spending transaction and the SHA256 of witnessScript must match the 32-byte hash of the following:
+This is a standard SegWit P2WSH transaction. Note that the witness and empty ``scriptSig`` are provided by a subsequent transaction that spends the funding transaction output. The ``scriptPubKey`` of the funding transaction indicates that a witness script should be provided with a given hash; the ``witnessScript`` (≤ 10,000 bytes) is popped off the initial witness stack of a spending transaction and the SHA256 of witnessScript must match the 32-byte hash of the following:
 
 	2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY	
-	OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY 
-
-The channel token consists of the customer’s channel public key and wallet commitment from initializing the channel. The unique channel identifier is the hash of the channel public key. ***What is the channel public key?***
-
-The ``<channel-token>`` is a serialized token with the following structure: (a) Initial wallet commitment, initial wallet public key and the channel public key. ***How can the channel token include the initial wallet public key? This is kept secret; again, what is the channel public key?***
+	OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT
 	
 4.3 Initial Wallet Commitment
 -------------
@@ -321,7 +317,7 @@ This wallet commitement below is created first during channel initialization, bu
 
   - ``txin[0]`` outpoint: txid and outpoint _index of the funding transaction
   - ``txin[0]`` script bytes: 0
-  - ``txin[0]`` witness: ``0 <channel-token> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY>``
+  - ``txin[0]`` witness: ``0 <mode> <<channel-token> or <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>``
 
 * ``txouts``: 
 * ``to_customer``: a timelocked (using ``OP_CSV``) version-0 P2WSH output sending funds back to the customer. So scriptPubKey is of the form ``0 <32-byte-hash>``. A customer node may create a transaction spending this output with:
@@ -332,22 +328,21 @@ This wallet commitement below is created first during channel initialization, bu
   
 	OP_IF
 	  # Merchant can spend if revocation token available
-	  OP_2 <revocation-pubkey> <merch-pubkey> OP_2   ***What is revocation-pubkey?***
+	  OP_2 <rev-pubkey> <merch-pubkey> OP_2
 	OP_ELSE
 	  # Customer must wait 
-	  <time-delay> OP_CSV OP_DROP <customer-pubkey>
+	  <time-delay> OP_CSV OP_DROP <cust-pubkey>
 	OP_ENDIF
 	OP_CHECKSIGVERIFY 
-	OP_BOLT
 
 * ``to_merchant``: A P2WPKH to merch-pubkey output (sending funds back to the merchant), i.e.
    * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
 
-Or, if a revoked commitment transaction is available, the merchant may spend the output with the above witness script and witness stack:
+Or, if a revoked commitment transaction is available, the merchant may spend the ``to_customer`` output with the above witness script and witness stack:
 
-	<revocation-token> 1 <witnessScript>
+	3 <rev-token> 1 <witnessScript>
 			
-To spend this***which output is this*** output, the merchant publishes a transaction with:
+To spend ``to_merchant`` output, the merchant publishes a transaction with:
 	
 	witness: <merch-sig> <merch-pubkey> <witnessScript>
 
