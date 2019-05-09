@@ -350,7 +350,7 @@ The customer initiates channel closing by posting a closing transaction that spe
 
 Once the timeout has been reached, the customer can post a transaction that claims the output of the customer closing transaction to another output. Before the timeout, the merchant can claim the funds from the ``to_customer`` output by posting a revocation token (via mode 3), if they have one. The merchant can immediately claim the ``to_merchant`` output from the customer closing transaction by presenting their P2WPKH address.
 
-The customer initiates channel closing ... **ADD MERCHANT LOGIC HERE**
+The merchant initiates channel closing ... **ADD MERCHANT LOGIC HERE**
 
 Reference Implementation
 ========================
