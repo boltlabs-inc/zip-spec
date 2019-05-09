@@ -280,17 +280,15 @@ We assume the following features are present:
 
 **Note**: We assume P2WSH as it enforces transaction non-malleability and allows unconfirmed transaction dependency chains. Another approach to transaction non-malleability would be acceptable.
 
-**Privacy Limitations**. With T-addresses, we give up the ability to hide the initial balance for the funding transaction and final balances when closing the channel. Channel opening and closing will be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
+**Privacy Limitations**. With T-addresses, we give up the ability to hide the initial balance for the funding transaction and final balances when closing the channel. Channel opening will be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
 
 4.1 Channel Opening
 -------------
 A channel is established when two parties successfully lock up funds in a multi-sig transparent address on the blockchain. The funds remain spendable by the customer in a commitment transaction that closes the channel and splits the funds as indicated by the last invocation of the (off-chain) pay protocol. The merchant can close the channel using their own commitment transaction, which claims the entire channel balance while giving the customer time to post the appropriate commitment transaction for closing.
 
-Alice and Bob first initialize the channel by generating their respective keypairs and computing the channel tokens for the initial wallet commitment.
+The customer and merchant first initialize the channel by generating their respective keypairs and computing the channel tokens for the initial wallet commitment.
 
-Alice (as customer) then creates a funding transaction that deposits ZEC to a 2-of-2 multi-signature transparent address using a pay-to-witness-script-hash (P2WSH) output (alternatively, a P2WPKH nested in a P2SH could work). Alice obtains a signature for the funding transaction and commitment transaction from Bob. Alice can then post the funding transaction to the blockchain.
-
-Once the funding transaction has been confirmed on the blockchain, Alice and Bob have effectively activated and established the channel.
+The customer then creates a funding transaction that deposits ZEC to a 2-of-2 multi-signature transparent address using a pay-to-witness-script-hash (P2WSH) output (alternatively, a P2WPKH nested in a P2SH could work). Alice obtains a signature for the funding transaction and commitment transaction from the merchant. The customer can then post the funding transaction to the blockchain.
 
 4.2 Funding Transaction
 -------------
@@ -315,9 +313,9 @@ This wallet commitement below is created first during channel initialization, bu
 * ``locktime``: should be set so that the commitment can be included in current block 
 * ``txin`` count: 1
 
-  - ``txin[0]`` outpoint: txid and outpoint _index of the funding transaction
+  - ``txin[0]`` outpoint: txid and outpoint_index of the funding transaction
   - ``txin[0]`` script bytes: 0
-  - ``txin[0]`` witness: ``0 <mode> <<channel-token> or <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>``
+  - ``txin[0]`` witness: ``0 <mode> <<channel-token> <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>``
 
 * ``txouts``: 
 * ``to_customer``: a timelocked (using ``OP_CSV``) version-0 P2WSH output sending funds back to the customer. So scriptPubKey is of the form ``0 <32-byte-hash>``. A customer node may create a transaction spending this output with:
@@ -348,10 +346,11 @@ To spend ``to_merchant`` output, the merchant publishes a transaction with:
 
 4.4 Channel Closing
 -------------
-The customer initiates channel closing by posting a closing transaction that spends from the multi-signature address with a witness that satisfies the witnessScript and the ``OP_BOLT`` opcode: the closure token and the two transaction outputs to the customer (``txout[0]``) and merchant (``txout[1]``). Note that the closure token consists of (a) Mode ID: 2 and (b) a merchant signature on the latest wallet state, which includes the current wallet public key and channel balance.  The customer’s transaction output is timelocked, while the merchant is able to spend immediately.
+The customer initiates channel closing by posting a closing transaction that spends from the multi-signature address with a witness that satisfies the witnessScript and the ``OP_BOLT`` opcode in mode 1. This consists of a closing token (i.e., merchant signature on the wallet state) or an opening of the initial wallet commitment (if there were no payments on the channel via mode 2). 
 
-***Why isn't this updated to have closing transactions for merchant as well****
+Once the timeout has been reached, the customer can post a transaction that claims the output of the customer closing transaction to another output. Before the timeout, the merchant can claim the funds from the ``to_customer`` output by posting a revocation token (via mode 3), if they have one. The merchant can immediately claim the ``to_merchant`` output from the customer closing transaction by presenting their P2WPKH address.
 
+The customer initiates channel closing ... **ADD MERCHANT LOGIC HERE**
 
 Reference Implementation
 ========================
