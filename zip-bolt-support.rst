@@ -49,19 +49,19 @@ Private payment channels as designed by the Bolt protocol require the following 
  
 (7) Ability to verify the transaction output such that:
 
-- if customer initiated closing, first output pays out to customer with a time lock and second output pays out to merchant immediately 
+- if customer initiated closing, first output pays out to customer with a time lock (to allow merchant to dispute customer balance) and second output pays out to merchant immediately 
 - if merchant initiated closing, a single output that pays the merchant the full balance of the channel with a time lock that allows for customer dispute
 
 **Channel Operation Assumptions.**
  - Single-funded channel by customer with a minimum fee paid to the merchant.
  - Either the customer or the merchant can initiate channel closing.
- - If the customer initiates closing, then the merchant can dispute the closing transaction if it disagrees with the refund token in the closing transaction.
- - If the merchant initiates closing, the customer has the opportunity to post her own valid closing transaction. In this case, the merchant has an additional opportunity to validate this closing transaction and can dispute if necessary.
+ - If the customer initiates closing, then the merchant can dispute the closing transaction if they disagrees with the closure token in the closing transaction.
+ - If the merchant initiates closing, the customer has the opportunity to post their own valid closing transaction. In this case, the merchant has an additional opportunity to validate this closing transaction and can dispute if necessary.
 
 1.1 Conditions for Opening Channel 
 -------------
 
-To open a channel, a customer picks a channel-specific public key, commits to an initial wallet, and receives a signature from the merchant (using his long-term keypair) on that wallet. A wallet consists of a wallet-specific public key, a customer balance, and a total channel balance, and is linked to the customer's channel-specific public key. The channel specific public key, initial customer balance, total channel balance, and initial wallet commitment comprise the customer's channel token.
+To open a channel, a customer picks a channel-specific public key, commits to an initial wallet, and receives a signature from the merchant (using their long-term keypair) on that wallet. A wallet consists of a wallet-specific public key, a customer balance, and a total channel balance, and is linked to the customer's channel-specific public key. The channel specific public key, initial customer balance, total channel balance, and initial wallet commitment comprise the customer's channel token.
 
 The keypairs used by both the merchant and the customer must support a blind signature scheme.
 
