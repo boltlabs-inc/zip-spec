@@ -104,7 +104,7 @@ The customer creates a funding transaction that spends ZEC from a shielded addre
 -------------
 The funding transaction is by default funded by only one participant, the customer.  
 
-This transaction has 2 shielded inputs (but can be up to some N) and 1 output to a P2SH address (to a 2-of-2 multi-sig address) with a the merchant public key. Note that the customer can specify as many shielded inputs to fund the channel sufficiently (limited only by the overall transaction size).
+This transaction has 2 shielded inputs (but can be up to some N) and 1 output to a P2SH address (to a 2-of-2 multi-sig address) with the merchant public key. Note that the customer can specify as many shielded inputs to fund the channel sufficiently (limited only by the overall transaction size).
 
 * ``lock_time``: 0
 * ``nExpiryHeight``: 0
@@ -119,7 +119,7 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
   - ``zkproof``: zero-knowledge proof for the note
   - ``spendAuthSig``: signature authorizing the spend
   
-* ``vShieldedSpend[1]``: tx for merchant’s note commitment and nullifier for the coins (if dual-funded)
+* ``vShieldedSpend[1..N]``: additional tx for customer's note commitment and nullifier for the coins 
   
   - ``cv``: commitment for the input note
   - ``root``: root hash of note commitment tree at some block height
@@ -134,7 +134,7 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
 
 To redeem this output, the redeeming transaction must present:
 
-	scriptSig: 0 <mode> <<channel-token> <closing-token> or <rev-token>> <cust-sig> <merch-sig> <serializedScript>, 
+	scriptSig: 0 <opbolt-mode> <<channel-token> <closing-token>> <cust-sig> <merch-sig> <serializedScript>,
 	
 where ``serializedScript`` is as follows: 
 	
@@ -159,7 +159,7 @@ The customer's commitment transaction is described below.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <mode> <<channel-token> <closing-token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
+   - ``txin[0]`` script sig: 0 <opbolt-mode> <<channel-token> <closing-token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
 
 * ``txout`` count: 2
 * ``txouts``: 
@@ -191,7 +191,7 @@ The merchant can create their own initial commitment transaction as follows.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <mode> <<closing-token> <channel-token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
+   - ``txin[0]`` script sig: 0 <opbolt-mode> <<closing-token> <channel-token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
 
 * ``txout`` count: 1
 * ``txouts``: 
