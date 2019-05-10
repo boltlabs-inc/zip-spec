@@ -234,6 +234,8 @@ Because we do not know how to encumber the outputs of shielded outputs right now
    - ``outCiphertext``: encrypted output note (part 2)
    - ``zkproof``: zero-knowledge proof for the note
 
+The merchant can initiate closing by posting the initial commitment transaction (in Section 2.3) from establishing the channel that pays the merchant the full balance of the channel with a time lock that allows for customer dispute. The merchant can then post a separate standard transaction that moves those funds to a shielded address.
+
 3. Custom Shielded Tx: Using Z-addresses and Scriptless
 -------------
 We assume the following features are present:
@@ -313,7 +315,7 @@ This wallet commitement below is created first during channel initialization, bu
 * ``locktime``: should be set so that the commitment can be included in current block 
 * ``txin`` count: 1
 
-  - ``txin[0]`` outpoint: txid and outpoint_index of the funding transaction
+  - ``txin[0]`` outpoint: ``txid`` and ``outpoint_index`` of the funding transaction
   - ``txin[0]`` script bytes: 0
   - ``txin[0]`` witness: ``0 <mode> <<channel-token> <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>``
 
@@ -344,13 +346,41 @@ To spend ``to_merchant`` output, the merchant publishes a transaction with:
 	
 	witness: <merch-sig> <merch-pubkey> <witnessScript>
 
+The merchant create its own initial commitment transaction as follows.
+
+* ``version``: specify version number
+* ``groupid``: specify group id
+* ``locktime``: should be set so that the commitment can be included in current block 
+* ``txin`` count: 1
+
+  - ``txin[0]`` outpoint: ``txid`` and ``outpoint_index`` of the funding transaction
+  - ``txin[0]`` script bytes: 0
+  - ``txin[0]`` witness: ``0 <mode> <<channel-token> <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>``
+
+* ``txout`` count: 1
+* ``txouts``: 
+
+  * ``to_merchant``: a timelocked (using ``OP_CSV``) P2WSH output sending all the funds back to the merchant. So ``scriptPubKey`` is of the form ``0 <32-byte-hash>``.  
+      - ``amount``: balance paid back to merchant
+      - ``nSequence: <time-delay>``
+      - ``witness: 1 <merch-sig> 0 <witnessScript>``
+      - ``witnessScript``:
+      
+		OP_IF
+	  	  OP_2 <closing-token> <cust-pubkey> OP_2
+		OP_ELSE
+		  <time-delay> OP_CSV OP_DROP <merchant-pubkey>
+		OP_ENDIF
+		OP_CHECKSIGVERIFY
+
+
 4.4 Channel Closing
 -------------
 The customer initiates channel closing by posting a closing transaction that spends from the multi-signature address with a witness that satisfies the witnessScript and the ``OP_BOLT`` opcode in mode 1. This consists of a closing token (i.e., merchant signature on the wallet state) or an opening of the initial wallet commitment (if there were no payments on the channel via mode 2). 
 
 Once the timeout has been reached, the customer can post a transaction that claims the output of the customer closing transaction to another output. Before the timeout, the merchant can claim the funds from the ``to_customer`` output by posting a revocation token (via mode 3), if they have one. The merchant can immediately claim the ``to_merchant`` output from the customer closing transaction by presenting their P2WPKH address.
 
-The merchant initiates channel closing ... **ADD MERCHANT LOGIC HERE**
+The merchant can initiate closing by posting the initial commitment transaction (in Section 4.3) from establishing the channel that pays the merchant the full balance of the channel with a time lock that allows for customer dispute.
 
 Reference Implementation
 ========================
