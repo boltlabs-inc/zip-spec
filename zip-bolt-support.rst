@@ -142,7 +142,7 @@ where ``serializedScript`` is as follows:
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
 
-The customer broadcasts the funding transaction and waits for the network to confirm the transaction. Once the transaction is confirmed, the customer completes its initial commitment transaction and provides the channel token to the merchant so he can create his own commitment transaction.
+The customer creates its initial commitment transaction _before_ the funding transaction is confirmed (since customer needs to know they can get their money back). Similarly, the merchant creates his initial commitment transaction _before_ the funding transaction is confirmed. Once both commitment transactions have been created, the customer broadcasts the funding transaction and waits for the network to confirm the transaction. After the transaction has been confirmed, the payment channel is established.
 
 2.3 Commitment Transactions
 -------------
@@ -302,7 +302,7 @@ The customer then creates a funding transaction that deposits ZEC to a 2-of-2 mu
 -------------
 The funding transaction is by default funded by only one participant, the customer. This transaction is a P2WSH SegWit transaction. Here is a high-level of what the funding transaction would look like:
 
-	witness: 0 <mode> <<channel-token> <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
+	witness: 0 <opbolt-mode> <<channel-token> <closing token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>
 	
 	scriptSig: (empty)	
 	scriptPubKey: 0 <32-byte-hash>
@@ -323,7 +323,7 @@ This wallet commitement below is created first during channel initialization, bu
 
   - ``txin[0]`` outpoint: ``txid`` and ``outpoint_index`` of the funding transaction
   - ``txin[0]`` script bytes: 0
-  - ``txin[0]`` witness: ``0 <mode> <<channel-token> <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>``
+  - ``txin[0]`` witness: ``0 <opbolt-mode> <<channel-token> <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>``
 
 * ``txouts``: 
 * ``to_customer``: a timelocked (using ``OP_CSV``) version-0 P2WSH output sending funds back to the customer. So scriptPubKey is of the form ``0 <32-byte-hash>``. A customer node may create a transaction spending this output with:
@@ -361,7 +361,7 @@ The merchant can create their own initial commitment transaction as follows.
 
   - ``txin[0]`` outpoint: ``txid`` and ``outpoint_index`` of the funding transaction
   - ``txin[0]`` script bytes: 0
-  - ``txin[0]`` witness: ``0 <mode> <<channel-token> <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>``
+  - ``txin[0]`` witness: ``0 <opbolt-mode> <<channel-token> <closing token> or <rev-token>> <cust-sig> <merch-sig> <2 <cust_fund_pubkey> <merch_fund_pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT>``
 
 * ``txout`` count: 1
 * ``txouts``: 
