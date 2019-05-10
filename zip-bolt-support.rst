@@ -178,7 +178,7 @@ The customer's commitment transaction is described below.
   * ``to_merchant``: A P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
       * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
 
-The merchant create its own initial commitment transaction as follows.
+The merchant creates their own initial commitment transaction as follows.
 
 * ``version``: specify version number
 * ``groupid``: specify group id
@@ -346,7 +346,7 @@ To spend ``to_merchant`` output, the merchant publishes a transaction with:
 	
 	witness: <merch-sig> <merch-pubkey> <witnessScript>
 
-The merchant create its own initial commitment transaction as follows.
+The merchant create their own initial commitment transaction as follows.
 
 * ``version``: specify version number
 * ``groupid``: specify group id
