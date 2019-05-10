@@ -178,7 +178,7 @@ The customer's commitment transaction is described below.
   * ``to_merchant``: A P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
       * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
 
-The merchant creates their own initial commitment transaction as follows.
+The merchant can create their own initial commitment transaction as follows.
 
 * ``version``: specify version number
 * ``groupid``: specify group id
@@ -264,11 +264,13 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
 
 3.3 Initial Wallet Commitment
 -------------
-The initial wallet commitment will spend from the shielded address to two outputs: a P2SH output (for customer) and P2PKH (for merchant).  The first output pays the customer with a timelock (or the merchant with a revocation token) and the second output allows the merchant to spend immediately. It is not clear to us whether it will be possible to encumber the outputs of shielded outputs directly. We would appreciate feedback on the possibilities with commitment transactions as shielded transactions.
+The initial wallet commitment will spend from the shielded address to two outputs: a P2SH output (for customer) and P2PKH (for merchant).  The first output pays the customer with a timelock (or the merchant with a revocation token) and the second output allows the merchant to spend immediately. It is not clear to us whether it will be possible to encumber the outputs of shielded outputs directly. 
+
+We would appreciate feedback on the possibilities with creating commitment transactions via shielded transactions only.
 
 3.4. Channel Closing
 -------------
-The channel closing consists of broadcasting the most recent commitment transaction and requires that the customer present the closure token necessary to claim the funds.
+The channel closing consists of the customer broadcasting the most recent commitment transaction and requires that they present the closure token necessary to claim the funds. Similarly, the merchant would be able to claim the funds with the appropriate revocation token as well.
 
 4. Bitcoin Compatible: Using T-address and Scripting Opcodes
 -------------
@@ -290,7 +292,7 @@ A channel is established when two parties successfully lock up funds in a multi-
 
 The customer and merchant first initialize the channel by generating their respective keypairs and computing the channel tokens for the initial wallet commitment.
 
-The customer then creates a funding transaction that deposits ZEC to a 2-of-2 multi-signature transparent address using a pay-to-witness-script-hash (P2WSH) output (alternatively, a P2WPKH nested in a P2SH could work). Alice obtains a signature for the funding transaction and commitment transaction from the merchant. The customer can then post the funding transaction to the blockchain.
+The customer then creates a funding transaction that deposits ZEC to a 2-of-2 multi-signature transparent address using a pay-to-witness-script-hash (P2WSH) output (alternatively, a P2WPKH nested in a P2SH could work). The customer obtains a signature for the funding transaction and commitment transaction from the merchant. The customer can then post the funding transaction to the blockchain.
 
 4.2 Funding Transaction
 -------------
@@ -346,7 +348,7 @@ To spend ``to_merchant`` output, the merchant publishes a transaction with:
 	
 	witness: <merch-sig> <merch-pubkey> <witnessScript>
 
-The merchant create their own initial commitment transaction as follows.
+The merchant can create their own initial commitment transaction as follows.
 
 * ``version``: specify version number
 * ``groupid``: specify group id
