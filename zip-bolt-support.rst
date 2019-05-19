@@ -1,7 +1,7 @@
 ::
 
   ZIP: XXX
-  Title: Add support for Bolt protocol 
+  Title: Add support for Blind Off-chain Lightweight Transactions (Bolt)
   Authors: J. Ayo Akinyele <ayo@boltlabs.io>
            Colleen Swanson <swan@boltlabs.io>
   Credits: Ian Miers <imiers@z.cash>
@@ -79,10 +79,10 @@ We assume the following specific features are present:
 
 (1) ``OP_CLTV`` - absolute lock time
 (2) ``OP_CSV`` - relative lock time
-(3) shielded address support
+(3) Can specify shielded inputs and outputs
 (4) 2-of-2 multi-sig transparent address support (via P2SH)
-(5) Transaction non-malleability
-(6) ``OP_BOLT`` opcode: takes two inputs as argument (an integer for mode and a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack: 
+(5) A non-SegWit approach that enables transaction non-malleability
+(6) ``OP_BOLT`` opcode: takes a single argument (the first byte represents the mode followed by a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack: 
 
     * Mode 1 (for customer-initiated close). This mode expects a channel token and a customer closure token of one of the following types:
 
