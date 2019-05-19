@@ -130,13 +130,21 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
 
   - ``scriptPubKey`` must have the form ``0 <32-byte hash>``, where the latter is the hash of the script needed to spend the output.
 
-To redeem this output, the redeeming transaction must use the following ``scriptSig``:
+To redeem this output as the customer, the redeeming transaction must use the following ``scriptSig``:
 
-	0 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <serializedScript>,
-	
+	1 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <serializedScript>,
+
+or as the merchant:
+
+	1 <<opbolt-mode> <channel-token> <closing-token>> <merch-sig> <serializedScript>,
+
 where ``serializedScript`` is as follows: 
 	
-	OP_IF 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT OP_ENDIF
+	OP_IF 
+	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG 
+	OP_ELSE 
+	  <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT 
+	OP_ENDIF
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
 
