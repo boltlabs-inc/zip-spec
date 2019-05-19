@@ -1,7 +1,7 @@
 ::
 
   ZIP: XXX
-  Title: Add support for Blind Off-chain Lightweight Transactions (Bolt)
+  Title: Add support for Blind Off-chain Lightweight Transactions (Bolt) protocol
   Authors: J. Ayo Akinyele <ayo@boltlabs.io>
            Colleen Swanson <swan@boltlabs.io>
   Credits: Ian Miers <imiers@z.cash>
@@ -132,11 +132,11 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
 
 To redeem this output, the redeeming transaction must use the following ``scriptSig``:
 
-	0 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <merch-sig> <serializedScript>,
+	0 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <serializedScript>,
 	
 where ``serializedScript`` is as follows: 
 	
-	2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT
+	OP_IF 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT OP_ENDIF
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
 
@@ -157,7 +157,7 @@ The customer's commitment transaction is described below.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_BOLT>
+   - ``txin[0]`` script sig: 0 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <OP_IF 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT OP_ENDIF>
 
 * ``txout`` count: 2
 * ``txouts``: 
@@ -173,7 +173,7 @@ The customer's commitment transaction is described below.
 
 To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with the customer signature after a time delay as follows:
 
-	``scriptSig: 1 <cust-sig> 0 <serializedScript>``
+	``1 <cust-sig> 0 <serializedScript>``
 	
 where the ``serializedScript`` is as follows
       
@@ -185,7 +185,7 @@ where the ``serializedScript`` is as follows
 		
 In the event of a dispute, the merchant can redeem the ``to_customer`` by posting a transaction ``scriptSig`` as follows:
 
-	``scriptSig: <revocation-sig> <revocation-token> 1``
+	``<revocation-sig> <revocation-token> 1``
 
 2.2.2 Merchant commitment transaction
 ----
@@ -198,7 +198,7 @@ The merchant can create their own initial commitment transaction as follows.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <<opbolt-mode> <closing-token> <channel-token>> <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_BOLT>
+   - ``txin[0]`` script sig: 0 <<opbolt-mode> <closing-token> <channel-token>> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_BOLT>
 
 * ``txout`` count: 1
 * ``txouts``: 
