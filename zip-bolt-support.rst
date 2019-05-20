@@ -143,7 +143,7 @@ where ``serializedScript`` is as follows:
 	OP_IF 
 	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG 
 	OP_ELSE 
-	  <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT 
+	  <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT 
 	OP_ENDIF
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
@@ -186,14 +186,14 @@ To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with
 where the ``serializedScript`` is as follows
       
 	``OP_IF``
-	  ``OP_2 <revocation-pubkey> <merch-pubkey> OP_2 CHECKMULTISIG``
+	  ``<revocation-pubkey> 3 OP_BOLT``
 	``OP_ELSE``
 	  ``<time-delay> OP_CSV OP_DROP <cust-pubkey> OP_CHECKSIGVERIFY``
 	``OP_ENDIF``
 		
 In the event of a dispute, the merchant can redeem the ``to_customer`` by posting a transaction ``scriptSig`` as follows:
 
-	``<revocation-sig> <revocation-token> 1``
+	``<revocation-token> 1``
 
 2.2.2 Merchant closing transaction
 ----
