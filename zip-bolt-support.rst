@@ -269,25 +269,30 @@ We assume the following features are present:
 
 The goal here is to perform all the same validation steps for channel opening/closing without relying on the scripting system, as well as allowing for relative timelocks (the equivalent of ``OP_CSV``). In order to support multihop payments, we need absolute timelocks as well (the equivalent of ``OP_CLTV``). We also want to ensure that transactions are non-malleable in order to allow for unconfirmed dependency transaction chains.
 
-**Limitations/Notes**: With extensions to shielded transaction format, it may be evident whenever parties are establishing private payment channels. We appreciate feedback on the feasibility of what is proposed for each aspect of the Bolt protocol.
+**Limitations/Notes**. With extensions to shielded transaction format, it may be evident whenever parties are establishing private payment channels. We appreciate feedback on the feasibility of what is proposed for each aspect of the Bolt protocol.
 
-3.1 Channel Opening
+**Channel Opening**. The customer creates a funding transaction that spends ZEC from a shielded address to a 2-of-2 multi-sig shielded address. Here is the flow (1) creating a multisig shielded address specifying both parties keys and (2) generating channel tokens.
+
+3.1 Funding Transaction
 -------------
-The customer creates a funding transaction that spends ZEC from a shielded address to a 2-of-2 multi-sig shielded address. Here is the flow (1) creating a multisig shielded address specifying both parties keys and (2) generating channel tokens.
+This transaction has 2 shielded inputs (but can be up to some N) and 1 output to a 2-of-2 shielded address. If a ``vBoltDescription`` field is added, then we could use it to store the channel parameters and the channel token for opening the channel.
 
-3.2 Funding Transaction
+3.2 Initial Wallet Commitment
 -------------
-The funding transaction is by default funded by only one participant, the customer. It could also be funded by the merchant. 
+The initial wallet commitment will spend from the shielded address to two shielded outputs.  The first shielded output pays the customer with a timelock (or the merchant with a revocation token) and the second shielded output allows the merchant to spend immediately. It is not clear to us whether it will be possible to encumber the outputs of shielded outputs directly. 
 
-This transaction has 2 shielded inputs (but can be up to some N) and 1 output to a 2-of-2 shielded address with the merchant public key. If an ``vBoltDescription`` field is added, then we could use it to store the channel parameters and the channel token for opening the channel.
+Feedback from @Str4d on how we could encumber shielded outputs:
 
-3.3 Initial Wallet Commitment
--------------
-The initial wallet commitment will spend from the shielded address to two outputs: a P2SH output (for customer) and P2PKH (for merchant).  The first output pays the customer with a timelock (or the merchant with a revocation token) and the second output allows the merchant to spend immediately. It is not clear to us whether it will be possible to encumber the outputs of shielded outputs directly. 
+* The encumbered output would contain a commitment to the various Bolt parameters (the timelock, the revocation token, etc).
+     * Without changing the Sapling circuit, the commitment would be added to a global Merkle tree in parallel to the current Sapling Merkle tree (meaning that they don't have a shared privacy set).
+     * If the Sapling circuit was altered, the privacy sets could potentially be shared, at the cost of requiring all Sapling users to be aware of Bolt semantics. IMHO this probably isn't worth the cost of doing such a change, but we could consider it during a later general programmability solution.
+     * The parameters themselves would probably also be included directly in the transaction in an encrypted field (as we do for shielded notes).
+    
+* The spend using that output would contain a proof using the Bolt circuit, and the necessary public inputs such as the "time" at which the proof was created (perhaps stored in the locktime field).
+     * The circuit would enforce the equivalent of the OP_BOLT logic, allowing a valid proof to be created if the prover had knowledge of the revocation key and merchant key, OR the prover had knowledge of the customer key AND the public time input was past the committed timelock. It would also enforce all the necessary peripherial checks (the parameters match the original commitment, there exists a Merkle path from the original commitment to a specified public anchor, etc.).
+     * Network nodes would validate the Bolt-specific proof, and also validate the public inputs (if necessary, e.g. the locktime field is already enforced by the network).
 
-We would appreciate feedback on the possibilities with creating commitment transactions via shielded transactions only.
-
-3.4. Channel Closing
+3.3 Channel Closing
 -------------
 The channel closing consists of the customer broadcasting the most recent commitment transaction and requires that they present the closure token necessary to claim the funds. Similarly, the merchant would be able to claim the funds with the appropriate revocation token as well.
 
