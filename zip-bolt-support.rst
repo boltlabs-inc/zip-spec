@@ -90,9 +90,7 @@ We assume the following specific features are present:
   
        (b) A signature under the merchant's longterm keypair on the customer's current wallet state, together with the wallet state. This type of closure token is to be used when one or more payment have been made on the channel. The opcode validates the merchant signature on the closure token first. Then, the opcode verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, and (2) the customer’s payout is timelocked (to allow for merchant dispute). 
 
-    * Mode 2 (for merchant-initiated close). The opcode expects a channel token and a merchant closure token, which is signed using the customer's channel-specific public key. The opcode validates the customer signature on the provided closure token and verifies that the closing transaction contains a timelocked output paying the total channel balance to the merchant. The output must be timelocked to allow for the customer to post her own closing transaction with a different split of channel funds.
-
-    * Mode 3 (for merchant dispute of customer closure token). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
+    * Mode 2 (for merchant dispute of customer closure token). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
 
 **Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final spliting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
 
@@ -186,7 +184,7 @@ To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with
 where the ``serializedScript`` is as follows
       
 	``OP_IF``
-	  ``<revocation-pubkey> 3 OP_BOLT``
+	  ``<revocation-pubkey> 2 OP_BOLT``
 	``OP_ELSE``
 	  ``<time-delay> OP_CSV OP_DROP <cust-pubkey> OP_CHECKSIGVERIFY``
 	``OP_ENDIF``
