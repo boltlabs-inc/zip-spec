@@ -141,9 +141,9 @@ or as the merchant:
 where ``serializedScript`` is as follows: 
 	
 	OP_IF 
-	  <time-delay> OP_CSV OP_DROP 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG 
+	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG 
 	OP_ELSE 
-	  <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT 
+	  <time-delay> OP_CSV OP_DROP <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT 
 	OP_ENDIF
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
@@ -165,7 +165,7 @@ The customer's commitment transaction is described below.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <OP_IF <time-delay> OP_CSV OP_DROP 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT OP_ENDIF>
+   - ``txin[0]`` script sig: 0 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <OP_IF 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <time-delay> OP_CSV OP_DROP <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT OP_ENDIF>
 
 * ``txout`` count: 2
 * ``txouts``: 
@@ -218,7 +218,7 @@ The merchant can create their own initial commitment transaction as follows.
       - ``serializedScript``:
       
 		OP_IF
-	  	  OP_2 <closing-token> <cust-pubkey> OP_2
+	  	  OP_2 <closing-token> <cust-pubkey> OP_BOLT
 		OP_ELSE
 		  <time-delay> OP_CSV OP_DROP <merchant-pubkey>
 		OP_ENDIF
