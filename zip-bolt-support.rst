@@ -218,11 +218,10 @@ The merchant can create their own initial commitment transaction as follows.
       - ``serializedScript``:
       
 		OP_IF
-	  	  OP_2 <closing-token> <cust-pubkey> OP_BOLT
+	  	  <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT
 		OP_ELSE
-		  <time-delay> OP_CSV OP_DROP <merchant-pubkey>
+		  <time-delay> OP_CSV OP_DROP <merchant-pubkey> OP_CHECKSIGVERIFY
 		OP_ENDIF
-		OP_CHECKSIGVERIFY
 
 After each payment on the channel, the customer obtains a closing token for the updated channel balance and provides the merchant a revocation token for the previous state along with the associated wallet public key (this invalidates the pub key). If the customer initiated closing, the merchant can use the revocation token to spend the funds of the channel if the customer posts an outdated commitment transaction.
 
