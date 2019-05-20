@@ -136,12 +136,12 @@ To redeem this output as the customer, the redeeming transaction must use the fo
 
 or as the merchant:
 
-	1 <<opbolt-mode> <channel-token> <closing-token>> <merch-sig> <serializedScript>,
+	1 <cust-sig> <merch-sig> <serializedScript>,
 
 where ``serializedScript`` is as follows: 
 	
 	OP_IF 
-	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG 
+	  <time-delay> OP_CSV OP_DROP 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG 
 	OP_ELSE 
 	  <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT 
 	OP_ENDIF
@@ -165,7 +165,7 @@ The customer's commitment transaction is described below.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <OP_IF 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT OP_ENDIF>
+   - ``txin[0]`` script sig: 0 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <OP_IF <time-delay> OP_CSV OP_DROP 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT OP_ENDIF>
 
 * ``txout`` count: 2
 * ``txouts``: 
@@ -206,7 +206,7 @@ The merchant can create their own initial commitment transaction as follows.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <<opbolt-mode> <closing-token> <channel-token>> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY OP_BOLT>
+   - ``txin[0]`` script sig: 0 <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG>
 
 * ``txout`` count: 1
 * ``txouts``: 
