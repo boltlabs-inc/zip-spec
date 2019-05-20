@@ -143,7 +143,7 @@ where ``serializedScript`` is as follows:
 	OP_IF 
 	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG 
 	OP_ELSE 
-	  <time-delay> OP_CSV OP_DROP <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT 
+	  <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT 
 	OP_ENDIF
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
