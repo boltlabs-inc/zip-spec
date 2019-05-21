@@ -130,7 +130,7 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
 
 To redeem this output as the customer, the redeeming transaction must use the following ``scriptSig``:
 
-	1 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <serializedScript>,
+	1 <<channel-token> <closing-token>> <cust-sig> <serializedScript>,
 
 or as the merchant:
 
@@ -163,7 +163,7 @@ The customer's closing transaction is described below.
     
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <<opbolt-mode> <channel-token> <closing-token>> <cust-sig> <OP_IF 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT OP_ENDIF>
+   - ``txin[0]`` script sig: 0 <<channel-token> <closing-token>> <cust-sig> <OP_IF 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT OP_ENDIF>
 
 * ``txout`` count: 2
 * ``txouts``: 
@@ -216,7 +216,7 @@ The merchant can create their own initial closing transaction as follows.
       - ``serializedScript``:
       
 		OP_IF
-	  	  <cust-pubkey> OP_CHECKSIGVERIFY OP_BOLT
+	  	  <cust-pubkey> OP_CHECKSIGVERIFY 2 OP_BOLT
 		OP_ELSE
 		  <time-delay> OP_CSV OP_DROP <merchant-pubkey> OP_CHECKSIGVERIFY
 		OP_ENDIF
@@ -293,7 +293,7 @@ Feedback from @Str4d on how we could encumber shielded outputs:
 -------------
 The channel closing consists of the customer broadcasting the most recent commitment transaction and requires that they present the closure token necessary to claim the funds. Similarly, the merchant would be able to claim the funds with the appropriate revocation token as well.
 
-4. Bitcoin Compatible: Using T-address and Scripting Opcodes
+4. Bitcoin Compatible: Using T-address and Scripting Opcodes (TODO: REMOVE)
 -------------
 We assume the following features are present:
 
@@ -307,15 +307,13 @@ We assume the following features are present:
 
 **Privacy Limitations**. With T-addresses, we give up the ability to hide the initial balance for the funding transaction and final balances when closing the channel. Channel opening will be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
 
-4.1 Channel Opening
--------------
-A channel is established when two parties successfully lock up funds in a multi-sig transparent address on the blockchain. The funds remain spendable by the customer in a commitment transaction that closes the channel and splits the funds as indicated by the last invocation of the (off-chain) pay protocol. The merchant can close the channel using their own commitment transaction, which claims the entire channel balance while giving the customer time to post the appropriate commitment transaction for closing.
+**Channel Opening**. A channel is established when two parties successfully lock up funds in a multi-sig transparent address on the blockchain. The funds remain spendable by the customer in a commitment transaction that closes the channel and splits the funds as indicated by the last invocation of the (off-chain) pay protocol. The merchant can close the channel using their own commitment transaction, which claims the entire channel balance while giving the customer time to post the appropriate commitment transaction for closing.
 
 The customer and merchant first initialize the channel by generating their respective keypairs and computing the channel tokens for the initial wallet commitment.
 
 The customer then creates a funding transaction that deposits ZEC to a 2-of-2 multi-signature transparent address using a pay-to-witness-script-hash (P2WSH) output (alternatively, a P2WPKH nested in a P2SH could work). The customer obtains a signature for the funding transaction and commitment transaction from the merchant. The customer can then post the funding transaction to the blockchain.
 
-4.2 Funding Transaction
+4.1 Funding Transaction
 -------------
 The funding transaction is by default funded by only one participant, the customer. This transaction is a P2WSH SegWit transaction. Here is a high-level of what the funding transaction would look like:
 
@@ -329,7 +327,7 @@ This is a standard SegWit P2WSH transaction. Note that the witness and empty ``s
 	2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIGVERIFY	
 	OP_DUP OP_HASH160 <hash-of-channel-token> OP_EQUALVERIFY OP_BOLT
 	
-4.3 Initial Wallet Commitment
+4.2 Initial Wallet Commitment
 -------------
 This wallet commitement below is created first during channel initialization, but the customer does not broadcast to the network.
 
@@ -397,7 +395,7 @@ The merchant can create their own initial commitment transaction as follows.
 		OP_CHECKSIGVERIFY
 
 
-4.4 Channel Closing
+4.3 Channel Closing
 -------------
 The customer initiates channel closing by posting a closing transaction that spends from the multi-signature address with a witness that satisfies the witnessScript and the ``OP_BOLT`` opcode in mode 1. This consists of a closing token (i.e., merchant signature on the wallet state) or an opening of the initial wallet commitment (if there were no payments on the channel via mode 2). 
 
