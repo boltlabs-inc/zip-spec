@@ -97,6 +97,7 @@ We assume the following specific features are present:
 **Channel Opening**. The customer creates a funding transaction that spends ZEC from a shielded address to a 2-of-2 multi-sig transparent address using a pay-to-script-hash (P2SH) output with a `pay-to-public-key-hash (P2PKH)` embedded inside the script. Here is what the funding transaction looks like when opening the channel.
 
 **Tokens**. There are three types of tokens described in this section: (a) channel token, (b) closure token, and (c) revocation token. 
+
 (a) Channel token: this consists of public keys from the customer and merchant for the channel and a long-lived public key for the merchant. It also includes the initial customer balance and optionally, the wallet commitment.
 (b) Closure token: for the customer, this consists of the ... 
 (c) Revocation token: this consists of a wallet public key and a corresponding revocation signature.
