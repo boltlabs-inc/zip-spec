@@ -99,7 +99,7 @@ We assume the following specific features are present:
 **Tokens**. There are three types of tokens described in this section: (1) channel token, (2) closure token, and (3) revocation token. 
 
 (a) *Channel token*: this consists of public keys from the customer and merchant for the channel and a long-lived public key for the merchant. It also includes the initial customer balance and optionally, the wallet commitment.
-(b) *Closure token*: for the customer, this consists of the ... 
+(b) *Closure token*: for the customer, this consists of the wallet (i.e., the channel public key, wallet public key, current channal balance, total channel balance), and a closure signature (i.e., blinded sig) on the wallet.
 (c) *Revocation token*: this consists of a wallet public key and a corresponding revocation signature.
 
 2.1 Funding Transaction
