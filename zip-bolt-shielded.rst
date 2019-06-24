@@ -1,13 +1,13 @@
 ::
 
   ZIP: XXX
-  Title: Enabling Blind Off-chain Lightweight Transactions (Bolt) protocol using shielded-only features
+  Title: Enabling Blind Off-chain Lightweight Transactions (Bolt) using shielded-only features
   Authors: J. Ayo Akinyele <ayo@boltlabs.io>
            Colleen Swanson <swan@boltlabs.io>
   Credits: Ian Miers <imiers@z.cash>
            Matthew Green <mgreen@z.cash>
   Category: Consensus
-  Created: 2019-03-30
+  Created: 2019-06-24
   License: MIT
 
 
@@ -29,24 +29,18 @@ Layer 2 protocols like Lightning enable scalable payments for Bitcoin. We want t
 Specification
 =============
 
-This specification details three potential approaches to integrating the features of Bolt into Zcash.
+Using shielded-only features of Zcash, we need the following capabilities:
 
-1. Custom Shielded Tx: Using Z-addresses and Scriptless
---------------------------
-
-Private payment channels as designed by the Bolt protocol require the following capabilities to achieve the stated anonymity properties at layer 2:
-
-(1) Ability to create a funding transaction such that the transaction inputs are anonymous.
-(2) Ability to verify additional fields from the transaction inputs/outputs as part of signature verification.
-(3) Ability to do relative time locks for commitment transactions to support unilateral channel closing.
-(4) Ability to do absolute and relative time locks to support multi-hop payments.
-(5) Ability to validate Bolt-specific commitment opening message and closing signature:
+(1) Ability to verify additional fields from the shielded transaction as part of signature verification.
+(2) Ability to do relative time locks for commitment transactions to support unilateral channel closing.
+(3) Ability to do absolute time locks to support multi-hop payments.
+(4) Ability to validate Bolt-specific commitment opening message and closing signature:
 
     - check the validity of the commitment opening
-    - check the validity of randomized/blinded signature on the wallet commitment in closure token
+    - check the validity of blinded signature on the wallet commitment in closure token
     - check the validity of revocation token signature in the event of a channel dispute by merchant
 
-(6) Ability to verify the transaction output such that:
+(5) Ability to encumber the transaction output such that:
 
     - if customer initiated closing, first output pays out to customer with a time lock (to allow merchant to dispute customer balance) and second output pays out to merchant immediately
     - if merchant initiated closing, a single output that pays the merchant the full balance of the channel with a time lock that allows for customer dispute
@@ -57,21 +51,21 @@ Private payment channels as designed by the Bolt protocol require the following 
  - If the customer initiates closing, then the merchant can dispute the closing transaction if they disagrees with the closure token in the closing transaction.
  - If the merchant initiates closing, the customer has the opportunity to post their own valid closing transaction. In this case, the merchant has an additional opportunity to validate this closing transaction and can dispute if necessary.
 
-1.1 Conditions for Opening Channel
+Conditions for Opening Channel
 -------------
 
 To open a channel, a customer picks a channel-specific public key, commits to an initial wallet, and receives a signature from the merchant (using their long-term keypair) on that wallet. A wallet consists of a wallet-specific public key, a customer balance, and a total channel balance, and is linked to the customer's channel-specific public key. The channel specific public key, initial customer balance, total channel balance, and initial wallet commitment comprise the customer's channel token.
 
 The keypairs used by both the merchant and the customer must support a blind signature scheme.
 
-1.2 Conditions for Closing Channel
+Conditions for Closing Channel
 -------------
 
 A customer should be able to close the channel by either opening the initial wallet commitment (if no payments made) or posting a closing token.
 
 A merchant should be able to close the channel by either posting their closing token or, if the customer posts an outdated version of their closure token (or opens the initial wallet commitment for the channel after one or more payments have been made), a revocation token.
 
-1.3 Specific Features
+1.1 Specific Features
 -------------
 We assume the following features are present:
 
@@ -89,11 +83,11 @@ The goal here is to perform all the same validation steps for channel opening/cl
 
 **Channel Opening**. The customer creates a funding transaction that spends ZEC from a shielded address to a 2-of-2 multi-sig shielded address. Here is the flow (1) creating a multi-sig shielded address specifying both parties keys and (2) generating channel tokens.
 
-2.1 Funding Transaction
+1.2 Funding Transaction
 -------------
 This transaction has 2 shielded inputs (but can be up to some N) and 1 output to a 2-of-2 shielded address. If a ``vBoltDescription`` field is added, then we could use it to store the channel parameters and the channel token for opening the channel.
 
-2.2 Closing Transaction
+1.3 Closing Transaction
 -------------
 The initial wallet commitment will spend from the shielded address to two shielded outputs.  The first shielded output pays the customer with a timelock (or the merchant with a revocation token) and the second shielded output allows the merchant to spend immediately. It is not clear to us whether it will be possible to encumber the outputs of shielded outputs directly.
 
@@ -108,7 +102,7 @@ Feedback from @Str4d on how we could encumber shielded outputs:
      * The circuit would enforce the equivalent of the OP_BOLT logic, allowing a valid proof to be created if the prover had knowledge of the revocation key and merchant key, OR the prover had knowledge of the customer key AND the public time input was past the committed timelock. It would also enforce all the necessary peripherial checks (the parameters match the original commitment, there exists a Merkle path from the original commitment to a specified public anchor, etc.).
      * Network nodes would validate the Bolt-specific proof, and also validate the public inputs (if necessary, e.g. the locktime field is already enforced by the network).
 
-2.3 Channel Closing
+1.4 Channel Closing
 -------------
 The channel closing consists of the customer broadcasting the most recent commitment transaction and requires that they present the closure token necessary to claim the funds. Similarly, the merchant would be able to claim the funds with the appropriate revocation token as well.
 
