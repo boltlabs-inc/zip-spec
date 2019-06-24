@@ -4,6 +4,7 @@
   Title: Enabling Blind Off-chain Lightweight Transactions (Bolt) using shielded/transparent features
   Authors: J. Ayo Akinyele <ayo@boltlabs.io>
            Colleen Swanson <swan@boltlabs.io>
+	   James Prestwich <james@summa.one>
   Credits: Ian Miers <imiers@z.cash>
            Matthew Green <mgreen@z.cash>
   Category: Consensus
