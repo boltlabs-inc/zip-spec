@@ -29,7 +29,7 @@ Layer 2 protocols like Lightning enable scalable payments for Bitcoin. This spec
 Specification
 =============
 
-Using a mix of shielded and transparent transactions, we need the following capabilities:
+Based on a mix of shielded and transparent transactions, we need the following capabilities:
 
 (1) Ability to create a funding transaction such that the transaction inputs originate from the shielded pool.
 (2) Ability to do relative time locks for commitment transactions to support unilateral channel closing.
