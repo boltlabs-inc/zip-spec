@@ -1,7 +1,7 @@
 ::
 
   ZIP: XXX
-  Title: Enabling Blind Off-chain Lightweight Transactions (Bolt) using shielded/transparent features
+  Title: Non-private scripting for private transactions
   Authors: J. Ayo Akinyele <ayo@boltlabs.io>
            Colleen Swanson <swan@boltlabs.io>
 	   James Prestwich <james@summa.one>
@@ -20,7 +20,7 @@ The key words "MUST" and "MUST NOT" in this document are to be interpreted as de
 Abstract
 ========
 
-This proposal specifies three possible approaches for integrating the blind off-chain lightweight transaction (Bolt) protocol into Zcash.
+This proposal specifies a possible approach for integrating the blind off-chain lightweight transaction (Bolt) protocol into Zcash.
 
 Motivation
 ==========
