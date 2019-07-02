@@ -6,9 +6,8 @@
            Colleen Swanson <swan@boltlabs.io>
            James Prestwich <james@summa.one>
   Credits: Ian Miers <imiers@z.cash>
-           Matthew Green <mgreen@z.cash>
   Category: Consensus
-  Created: 2019-06-24
+  Created: 2019-07-02
   License: MIT
 
 
@@ -26,17 +25,17 @@ Motivation
 ==========
 
 The ability to add general programmability to shielded transactions is crucial for several use cases using Zcash which include the Blind Off-chain Lightweight Transactions (BOLT) protocol at layer 2 and support for Hashed-time Lock contracts (HTLCs) for better cross-chain interoperability with other chains.
-A solution that leverages Bitcoin script system in combination to shielded transactions is complicated by a lack of transaction malleability fix. Adopting a SegWit-style solution would break consensus rules that enable shielded transactions today and therefore incompatible with Zcash.
+A solution that leverages Bitcoin script system in combination with shielded transactions is complicated by a lack of transaction malleability fix. Adopting a SegWit-style solution would break consensus rules that enable shielded transactions today and therefore incompatible with Zcash.
 
 Instead, we are proposing a solution ...
 
 Specification
 =============
 
-ESCAPE redefines an existing NOP4 opcode such that when it is executed, the script interpreter will stop execution and
+``ESCAPE`` redefines an existing NOP4 opcode such that when it is executed, the script interpreter will stop execution and
 execute logic based on a message handler opcode CONTRACT that will complete checking the correctness of the transaction.
 
-The CONTRACT message handler opcode will then look for either a BOLT or HTLC type and then CONTRACT opcode will also ensure
+The ``CONTRACT`` message handler opcode will then look for either a BOLT or HTLC type and then ``CONTRACT`` opcode will also ensure
 that the transaction is not malleable by checking that there are only shielded inputs specified in the transaction.
 
 This solution would not break compatibility with existing clients as the opcodes will be ignored if they don't have BOLT or HTLC support.
