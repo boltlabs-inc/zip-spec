@@ -19,7 +19,7 @@ The key words "MUST" and "MUST NOT" in this document are to be interpreted as de
 Abstract
 ========
 
-This proposal describes a new opcode for the Bitcoin scripting system that restricts the execution of a strict in such a way that we can enable non-private scripting for shielded transactions and fix transaction malleability in transparent addresses.
+This proposal describes a new opcode for the Bitcoin scripting system that restricts the execution of a strict in such a way that we can enable non-private scripting for shielded transactions and fix transaction malleability with respect to transparent inputs.
 
 Motivation
 ==========
@@ -35,28 +35,53 @@ Specification
 ``ESCAPE`` redefines an existing NOP4 opcode such that when it is executed, the script interpreter will stop execution and
 execute logic based on a message handler opcode CONTRACT that will complete checking the correctness of the transaction.
 
-The ``CONTRACT`` message handler opcode will then look for either a BOLT or HTLC type and then ``CONTRACT`` opcode will also ensure
+The ``CONTRACT`` message handler opcode will then either be a BOLT or HTLC type and then the ``CONTRACT`` opcode will also ensure
 that the transaction is not malleable by checking that there are only shielded inputs specified in the transaction.
 
 This solution would not break compatibility with existing clients as the opcodes will be ignored if they don't have BOLT or HTLC support.
 And these additional opcodes would be a minimal addition to the Bitcoin script language for the purposes of enabling non-private scripting on
 shielded transactions.
 
-Based on a mix of shielded and transparent transactions, we need the following capabilities:
+Transaction Examples
+-------
 
-(1) Ability to create a funding transaction such that the transaction inputs originate from the shielded pool.
-(2) Ability to do relative time locks for commitment transactions to support unilateral channel closing.
-(3) Ability to do absolute time locks to support multi-hop payments.
-(4) Ability to validate Bolt-specific commitment opening message and closing signature:
+* ``lock_time``: 0
+* ``nExpiryHeight``: 0
+* ``valueBalance``: funding amount + transaction fee
+* ``nShieldedSpend``: 1 or N (if funded by both customer and merchant)
+* ``vShieldedSpend[0]``: tx for customer’s note commitment and nullifier for the coins
+
+  - ``cv``: commitment for the input note
+  - ``root``: root hash of note commitment tree at some block height
+  - ``nullifier``: unique serial number of the input note
+  - ``rk``: randomized pubkey for spendAuthSig
+  - ``zkproof``: zero-knowledge proof for the note
+  - ``spendAuthSig``: signature authorizing the spend
+
+* ``vShieldedSpend[1..N]``: additional tx for customer's note commitment and nullifier for the coins
+
+  - ``cv``: commitment for the input note
+  - ``root``: root hash of note commitment tree at some block height
+  - ``nullifier``: unique serial number of the input note
+  - ``rk``: randomized pubkey for spendAuthSig
+  - ``zkproof``: zero-knowledge proof for the note
+  - ``spendAuthSig``: signature authorizing the spend
+* ``tx_out_count``: 1
+* ``tx_out``: (using a P2SH address)
+
+  - ``scriptPubKey``: ``OP_ESCAPE OP_BOLT <version> <type> <binary-data>
+
+(1) Ability to validate Bolt-specific commitment opening message and closing signature:
 
     - check the validity of the commitment opening
     - check the validity of blinded signature on the wallet commitment in closure token
     - check the validity of revocation token signature in the event of a channel dispute by merchant
 
-(5) Ability to verify the transaction output such that:
+(2) Ability to verify the transaction output such that:
 
     - if customer initiated closing, first output pays out to customer with a time lock (to allow merchant to dispute customer balance) and second output pays out to merchant immediately
     - if merchant initiated closing, a single output that pays the merchant the full balance of the channel with a time lock that allows for customer dispute
+    - if mutual closing, an output to both parties with the appropriate balances and no time lock
 
 **Channel Operation Assumptions.**
  - Single-funded channel by customer with a minimum fee paid to the merchant.
@@ -81,7 +106,7 @@ A merchant should be able to close the channel by either posting their closing t
 Reference Implementation
 ========================
 
-We are currently working on a reference implementation based on section 2 in a fork of Zcash here: https://github.com/boltlabs-inc/zcash.
+Reference implementation will go here and will include message handler implementation for BOLT as an example: https://github.com/boltlabs-inc/zcash.
 
 References
 ==========
