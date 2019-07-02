@@ -19,7 +19,7 @@ The key words "MUST" and "MUST NOT" in this document are to be interpreted as de
 Abstract
 ========
 
-This proposal specifies three possible approaches for integrating the blind off-chain lightweight transaction (Bolt) protocol into Zcash. 
+This proposal specifies three possible approaches for integrating the blind off-chain lightweight transaction (Bolt) protocol into Zcash.
 
 Motivation
 ==========
@@ -29,7 +29,7 @@ Layer 2 protocols like Lightning enable scalable payments for Bitcoin. We want t
 Specification
 =============
 
-This specification details three potential approaches to integrating the features of Bolt into Zcash. 
+This specification details three potential approaches to integrating the features of Bolt into Zcash.
 
 1. General requirements for Bolt protocol
 --------------------------
@@ -46,10 +46,10 @@ Private payment channels as designed by the Bolt protocol require the following 
     - check the validity of the commitment opening
     - check the validity of randomized/blinded signature on the wallet commitment in closure token
     - check the validity of revocation token signature in the event of a channel dispute by merchant
- 
+
 (7) Ability to verify the transaction output such that:
 
-    - if customer initiated closing, first output pays out to customer with a time lock (to allow merchant to dispute customer balance) and second output pays out to merchant immediately 
+    - if customer initiated closing, first output pays out to customer with a time lock (to allow merchant to dispute customer balance) and second output pays out to merchant immediately
     - if merchant initiated closing, a single output that pays the merchant the full balance of the channel with a time lock that allows for customer dispute
 
 **Channel Operation Assumptions.**
@@ -58,7 +58,7 @@ Private payment channels as designed by the Bolt protocol require the following 
  - If the customer initiates closing, then the merchant can dispute the closing transaction if they disagrees with the closure token in the closing transaction.
  - If the merchant initiates closing, the customer has the opportunity to post their own valid closing transaction. In this case, the merchant has an additional opportunity to validate this closing transaction and can dispute if necessary.
 
-1.1 Conditions for Opening Channel 
+1.1 Conditions for Opening Channel
 -------------
 
 To open a channel, a customer picks a channel-specific public key, commits to an initial wallet, and receives a signature from the merchant (using their long-term keypair) on that wallet. A wallet consists of a wallet-specific public key, a customer balance, and a total channel balance, and is linked to the customer's channel-specific public key. The channel specific public key, initial customer balance, total channel balance, and initial wallet commitment comprise the customer's channel token.
@@ -68,7 +68,7 @@ The keypairs used by both the merchant and the customer must support a blind sig
 1.2 Conditions for Closing Channel
 -------------
 
-A customer should be able to close the channel by either opening the initial wallet commitment (if no payments made) or posting a closing token. 
+A customer should be able to close the channel by either opening the initial wallet commitment (if no payments made) or posting a closing token.
 
 A merchant should be able to close the channel by either posting their closing token or, if the customer posts an outdated version of their closure token (or opens the initial wallet commitment for the channel after one or more payments have been made), a revocation token.
 
@@ -82,21 +82,21 @@ We assume the following specific features are present:
 (3) Can specify shielded inputs and outputs
 (4) P2SH support - to build a 2-of-2 multi-sig style transaction
 (5) A non-SegWit approach that enables transaction non-malleability
-(6) ``OP_BOLT`` opcode: takes two arguments (the first byte represents the mode followed by a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack: 
+(6) ``OP_BOLT`` opcode: takes two arguments (the first byte represents the mode followed by a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack:
 
     * Mode 1 (for customer-initiated close). This mode expects a channel token and a customer closure token of one of the following types:
 
        (a) An opening of the channel's initial wallet commitment. This type of closure token is to be used when no payments have been made on the specified channel. The opcode verifies that the provided commitment opening is valid with respect to the specified channel.
-  
-       (b) A signature under the merchant's longterm keypair on the customer's current wallet state, together with the wallet state. This type of closure token is to be used when one or more payment have been made on the channel. The opcode validates the merchant signature on the closure token first. Then, the opcode verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, and (2) the customer’s payout is timelocked (to allow for merchant dispute). 
+
+       (b) A signature under the merchant's longterm keypair on the customer's current wallet state, together with the wallet state. This type of closure token is to be used when one or more payment have been made on the channel. The opcode validates the merchant signature on the closure token first. Then, the opcode verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, and (2) the customer’s payout is timelocked (to allow for merchant dispute).
 
     * Mode 2 (for merchant dispute of customer closure token). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
 
-**Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final spliting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
+**Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final splitting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
 
 **Channel Opening**. The customer creates a funding transaction that spends ZEC from a shielded address to a 2-of-2 multi-sig transparent address using a pay-to-script-hash (P2SH) output with a `pay-to-public-key-hash (P2PKH)` embedded inside the script. Here is what the funding transaction looks like when opening the channel.
 
-**Token Descriptions**. There are three types of tokens described in this section: (1) channel token, (2) closure token, and (3) revocation token. 
+**Token Descriptions**. There are three types of tokens described in this section: (1) channel token, (2) closure token, and (3) revocation token.
 
 (a) *Channel token*: this consists of public keys from the customer and merchant for the channel and a long-lived public key for the merchant. It also includes the initial customer balance and optionally, the wallet commitment.
 (b) *Closure token*: for the customer, this consists of the wallet (i.e., the channel public key, wallet public key, current channal balance, total channel balance), and a closure signature (i.e., blinded sig) on the wallet.
@@ -113,16 +113,16 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
 * ``valueBalance``: funding amount + transaction fee
 * ``nShieldedSpend``: 1 or N (if funded by both customer and merchant)
 * ``vShieldedSpend[0]``: tx for customer’s note commitment and nullifier for the coins
-  
+
   - ``cv``: commitment for the input note
   - ``root``: root hash of note commitment tree at some block height
   - ``nullifier``: unique serial number of the input note
   - ``rk``: randomized pubkey for spendAuthSig
   - ``zkproof``: zero-knowledge proof for the note
   - ``spendAuthSig``: signature authorizing the spend
-  
-* ``vShieldedSpend[1..N]``: additional tx for customer's note commitment and nullifier for the coins 
-  
+
+* ``vShieldedSpend[1..N]``: additional tx for customer's note commitment and nullifier for the coins
+
   - ``cv``: commitment for the input note
   - ``root``: root hash of note commitment tree at some block height
   - ``nullifier``: unique serial number of the input note
@@ -142,12 +142,12 @@ or as the merchant:
 
 	1 <cust-sig> <merch-sig> <serializedScript>,
 
-where ``serializedScript`` is as follows: 
-	
-	OP_IF 
-	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG 
-	OP_ELSE 
-	  <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT 
+where ``serializedScript`` is as follows:
+
+	OP_IF
+	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG
+	OP_ELSE
+	  <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT
 	OP_ENDIF
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
@@ -166,15 +166,15 @@ The customer's closing transaction is described below.
 * ``groupid``: specify group id
 * ``locktime``: should be set such that closing transactions can be included in a current block.
 * ``txin`` count: 1
-    
+
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
    - ``txin[0]`` script sig: 0 <<channel-token> <closing-token>> <cust-sig> <OP_IF 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT OP_ENDIF>
 
 * ``txout`` count: 2
-* ``txouts``: 
+* ``txouts``:
 
-  * ``to_customer``: a timelocked (using ``OP_CSV``) P2SH output sending funds back to the customer.  
+  * ``to_customer``: a timelocked (using ``OP_CSV``) P2SH output sending funds back to the customer.
       - ``amount``: balance paid back to customer
       - ``nSequence: <time-delay>``
       - ``scriptPubKey: 0 <32-byte-hash>``
@@ -186,15 +186,15 @@ The customer's closing transaction is described below.
 To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with the customer signature after a time delay as follows:
 
 	``1 <cust-sig> 0 <serializedScript>``
-	
+
 where the ``serializedScript`` is as follows
-      
+
 	``OP_IF``
 	  ``<revocation-pubkey> <merch-pubkey> 2 OP_BOLT``
 	``OP_ELSE``
 	  ``<time-delay> OP_CSV OP_DROP <cust-pubkey> OP_CHECKSIGVERIFY``
 	``OP_ENDIF``
-		
+
 In the event of a dispute, the merchant can redeem the ``to_customer`` by posting a transaction ``scriptSig`` as follows:
 
 	``<revocation-token> <merch-sig> 1``
@@ -207,20 +207,20 @@ The merchant can create their own initial closing transaction as follows.
 * ``groupid``: specify group id
 * ``locktime``: should be set such that closing transactions can be included in a current block.
 * ``txin`` count: 1
-    
+
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
    - ``txin[0]`` script sig: 0 <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG>
 
 * ``txout`` count: 1
-* ``txouts``: 
+* ``txouts``:
 
-  * ``to_merchant``: a timelocked (using ``OP_CSV``) P2SH output sending all the funds back to the merchant. So ``scriptPubKey`` is of the form ``0 <32-byte-hash>``.  
+  * ``to_merchant``: a timelocked (using ``OP_CSV``) P2SH output sending all the funds back to the merchant. So ``scriptPubKey`` is of the form ``0 <32-byte-hash>``.
       - ``amount``: balance paid back to merchant
       - ``nSequence: <time-delay>``
       - ``script sig: 1 <merch-sig> 0 <serializedScript>``
       - ``serializedScript``:
-      
+
 		OP_IF
 	  	  <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT
 		OP_ELSE
@@ -231,11 +231,11 @@ After each payment on the channel, the customer obtains a closing token for the 
 
 2.3 Channel Closing
 -------------
-To close the channel, the customer can initiate by posting the most recent closing transaction (in Section 2.3) that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode in mode 1. This consists of a closing token (i.e., merchant signature on the wallet state) or an opening of the initial wallet commitment (if there were no payments on the channel via mode 2). 
+To close the channel, the customer can initiate by posting the most recent closing transaction (in Section 2.3) that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode in mode 1. This consists of a closing token (i.e., merchant signature on the wallet state) or an opening of the initial wallet commitment (if there were no payments on the channel via mode 2).
 
 Once the timeout has been reached, the customer can post a transaction that claims the output of the customer closing transaction to a shielded output (see below for an example). Before the timeout, the merchant can claim the funds from the ``to_customer`` output by posting a revocation token, if they have one.
 
-The merchant can immediately claim the ``to_merchant`` output from the customer closing transaction to a shielded address by presenting their P2PKH address. 
+The merchant can immediately claim the ``to_merchant`` output from the customer closing transaction to a shielded address by presenting their P2PKH address.
 
 Because we do not know how to encumber the outputs of shielded outputs right now, we will rely on a standard transaction to move funds from the closing transaction into a shielded address as follows:
 
@@ -282,7 +282,7 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
 
 3.2 Closing Transaction
 -------------
-The initial wallet commitment will spend from the shielded address to two shielded outputs.  The first shielded output pays the customer with a timelock (or the merchant with a revocation token) and the second shielded output allows the merchant to spend immediately. It is not clear to us whether it will be possible to encumber the outputs of shielded outputs directly. 
+The initial wallet commitment will spend from the shielded address to two shielded outputs.  The first shielded output pays the customer with a timelock (or the merchant with a revocation token) and the second shielded output allows the merchant to spend immediately. It is not clear to us whether it will be possible to encumber the outputs of shielded outputs directly.
 
 Feedback from @Str4d on how we could encumber shielded outputs:
 
@@ -290,7 +290,7 @@ Feedback from @Str4d on how we could encumber shielded outputs:
      * Without changing the Sapling circuit, the commitment would be added to a global Merkle tree in parallel to the current Sapling Merkle tree (meaning that they don't have a shared privacy set).
      * If the Sapling circuit was altered, the privacy sets could potentially be shared, at the cost of requiring all Sapling users to be aware of Bolt semantics. IMHO this probably isn't worth the cost of doing such a change, but we could consider it during a later general programmability solution.
      * The parameters themselves would probably also be included directly in the transaction in an encrypted field (as we do for shielded notes).
-    
+
 * The spend using that output would contain a proof using the Bolt circuit, and the necessary public inputs such as the "time" at which the proof was created (perhaps stored in the locktime field).
      * The circuit would enforce the equivalent of the OP_BOLT logic, allowing a valid proof to be created if the prover had knowledge of the revocation key and merchant key, OR the prover had knowledge of the customer key AND the public time input was past the committed timelock. It would also enforce all the necessary peripherial checks (the parameters match the original commitment, there exists a Merkle path from the original commitment to a specified public anchor, etc.).
      * Network nodes would validate the Bolt-specific proof, and also validate the public inputs (if necessary, e.g. the locktime field is already enforced by the network).
