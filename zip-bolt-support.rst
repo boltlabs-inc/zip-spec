@@ -133,17 +133,9 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
 * ``tx_out_count``: 1
 * ``tx_out``: (using a P2SH address)
 
-  - ``scriptPubKey`` must have the form ``0 <32-byte hash>``, where the latter is the hash of the script needed to spend the output.
+  - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_open> || <version> <cust-pubkey> <merch-pubkey> )``
 
-To redeem this output as the customer, the redeeming transaction must use the following ``scriptSig``:
-
-	1 <<channel-token> <closing-token>> <cust-sig> <serializedScript>,
-
-or as the merchant:
-
-	1 <cust-sig> <merch-sig> <serializedScript>,
-
-where ``serializedScript`` is as follows:
+where ``<bolt_open>`` predicate is as follows (expressed in ``Script`` for convenience):
 
 	OP_IF
 	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG
@@ -171,6 +163,7 @@ The customer's closing transaction is described below.
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
    - ``txin[0]`` script sig: 0 <<channel-token> <closing-token>> <cust-sig> <OP_IF 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT OP_ENDIF>
+   - ``txin[0]`` scriptSig: ``PROGRAM PUSHDATA( <bolt_close> || <closing-token> <cust-sig> )``
 
 * ``txout`` count: 2
 * ``txouts``:
