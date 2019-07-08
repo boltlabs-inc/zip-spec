@@ -308,4 +308,5 @@ References
 ==========
 
 .. [#RFC2119] `Key words for use in RFCs to Indicate Requirement Levels <https://tools.ietf.org/html/rfc2119>`_
-.. [#bolt-paper] _`BOLT paper <https://eprint.iacr.org/2016/701>`_
+.. [#bolt-paper]  `Bolt: Anonymous Payment Channels for Decentralized Currencies <https://eprint.iacr.org/2016/701>`_
+.. [#wtp-programs]  `Whitelisted Transparent Programs <https://eprint.iacr.org/2016/701>`_
