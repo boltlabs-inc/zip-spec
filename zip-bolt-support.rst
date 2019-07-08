@@ -19,17 +19,17 @@ The key words "MUST" and "MUST NOT" in this document are to be interpreted as de
 Abstract
 ========
 
-This proposal specifies three possible approaches for integrating the blind off-chain lightweight transaction (Bolt) protocol [#bolt-paper] into Zcash.
+This proposal specifies three possible approaches for integrating the blind off-chain lightweight transaction (Bolt) protocol [#bolt-paper]_ into Zcash.
 
 Motivation
 ==========
 
-Layer 2 protocols like Lightning enable scalable payments for Bitcoin. This proposal specifies an integration of a privacy-preserving layer 2 protocol on top of Zcash via the Bolt protocol [#bolt-paper]_.
+Layer 2 protocols like Lightning enable scalable payments for Bitcoin but lack the mechanisms to provide strong privacy guarantees on the payment network. Zcash offers private transactions but currently lacks features that would enable a lightning-style payment channel. This proposal specifies an integration of the Bolt privacy-preserving Lightning protocol on top of Zcash [#bolt-paper]_.
 
 Specification
 =============
 
-This specification details two potential approaches to integrating the features of Bolt into Zcash and depends on a ZIP that introduces Whitelisted Transparent Programs (WTPs) [#wtp-programs]_ to enable restricted non-private scripting for shielded transactions.
+This specification details two potential approaches to integrating the features of Bolt into Zcash and depends on a ZIP that introduces Whitelisted Transparent Programs (WTPs) [#wtp-programs]_. WTPs are a necessary ingredient to enable a limited form of non-private scripting for shielded transactions.
 
 1. General requirements for Bolt protocol
 --------------------------
@@ -38,16 +38,15 @@ Private payment channels as designed by the Bolt protocol require the following 
 
 (1) Ability to create a funding transaction such that the transaction inputs are anonymous.
 (2) Ability to escrow funds to a multi-signature address with a fix for transaction malleability.
-(3) Ability to verify additional fields from the transaction inputs/outputs as part of signature verification.
-(4) Ability to do relative time locks for commitment transactions to support unilateral channel closing.
-(5) Ability to do absolute and relative time locks to support multi-hop payments.
-(6) Ability to validate Bolt-specific commitment opening message and closing signature using WTPs:
+(3) Ability to do relative time locks for commitment transactions to support unilateral channel closing.
+(4) Ability to do absolute and relative time locks to support multi-hop payments.
+(5) Ability to validate Bolt-specific commitment opening message and closing signature using WTPs:
 
     - check the validity of the commitment opening
     - check the validity of randomized/blinded signature on the wallet commitment in closure token
     - check the validity of revocation token signature in the event of a channel dispute by merchant
 
-(7) Ability to verify the transaction output using WTPs such that:
+(6) Ability to verify the transaction output using WTPs such that:
 
     - if customer initiated closing, first output pays out to customer with a time lock (to allow merchant to dispute customer balance) and second output pays out to merchant immediately
     - if merchant initiated closing, a single output that pays the merchant the full balance of the channel with a time lock that allows for customer dispute
@@ -82,7 +81,7 @@ We assume the following specific features are present:
 (3) Can specify shielded inputs and outputs
 (4) P2SH support - to build a 2-of-2 multi-sig style transaction
 (5) A non-SegWit approach that enables transaction non-malleability
-(6) ``OP_BOLT`` opcode: takes two arguments (the first byte represents the mode followed by a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack:
+(6) ``OP_BOLT`` opcode logic as WTPs: takes two arguments (the first byte represents the mode followed by a serialized token of hex encoded bytes) and outputs a ``True`` or ``False`` on the stack:
 
     * Mode 1 (for customer-initiated close). This mode expects a channel token and a customer closure token of one of the following types:
 
@@ -91,6 +90,8 @@ We assume the following specific features are present:
        (b) A signature under the merchant's longterm keypair on the customer's current wallet state, together with the wallet state. This type of closure token is to be used when one or more payment have been made on the channel. The opcode validates the merchant signature on the closure token first. Then, the opcode verifies two additional constraints: (1) there are two outputs in the closing transaction: one paying the merchant his balance and the other paying the customer, and (2) the customer’s payout is timelocked (to allow for merchant dispute).
 
     * Mode 2 (for merchant dispute of customer closure token). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
+
+[TODO: add WTP program here for both modes. ]
 
 **Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final splitting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of ``OP_BOLT`` opcodes.
 
