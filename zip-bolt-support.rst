@@ -7,29 +7,29 @@
   Credits: Ian Miers <imiers@z.cash>
            Matthew Green <mgreen@z.cash>
   Category: Consensus
-  Created: 2019-03-30
+  Created: 2019-07-04
   License: MIT
 
 
 Terminology
 ===========
 
-The key words "MUST" and "MUST NOT" in this document are to be interpreted as described in RFC 2119.
+The key words "MUST" and "MUST NOT" in this document are to be interpreted as described in RFC 2119. [#RFC2119]_
 
 Abstract
 ========
 
-This proposal specifies three possible approaches for integrating the blind off-chain lightweight transaction (Bolt) protocol into Zcash.
+This proposal specifies three possible approaches for integrating the blind off-chain lightweight transaction (Bolt) protocol [#bolt-paper] into Zcash.
 
 Motivation
 ==========
 
-Layer 2 protocols like Lightning enable scalable payments for Bitcoin. We want to implement a similar, privacy-preserving layer 2 protocol on top of Zcash.
+Layer 2 protocols like Lightning enable scalable payments for Bitcoin. This proposal specifies an integration of a privacy-preserving layer 2 protocol on top of Zcash via the Bolt protocol [#bolt-paper]_.
 
 Specification
 =============
 
-This specification details three potential approaches to integrating the features of Bolt into Zcash.
+This specification details two potential approaches to integrating the features of Bolt into Zcash and depends on a ZIP that introduces Whitelisted Transparent Programs (WTPs) [#wtp-programs]_ to enable restricted non-private scripting for shielded transactions.
 
 1. General requirements for Bolt protocol
 --------------------------
@@ -41,13 +41,13 @@ Private payment channels as designed by the Bolt protocol require the following 
 (3) Ability to verify additional fields from the transaction inputs/outputs as part of signature verification.
 (4) Ability to do relative time locks for commitment transactions to support unilateral channel closing.
 (5) Ability to do absolute and relative time locks to support multi-hop payments.
-(6) Ability to validate Bolt-specific commitment opening message and closing signature:
+(6) Ability to validate Bolt-specific commitment opening message and closing signature using WTPs:
 
     - check the validity of the commitment opening
     - check the validity of randomized/blinded signature on the wallet commitment in closure token
     - check the validity of revocation token signature in the event of a channel dispute by merchant
 
-(7) Ability to verify the transaction output such that:
+(7) Ability to verify the transaction output using WTPs such that:
 
     - if customer initiated closing, first output pays out to customer with a time lock (to allow merchant to dispute customer balance) and second output pays out to merchant immediately
     - if merchant initiated closing, a single output that pays the merchant the full balance of the channel with a time lock that allows for customer dispute
@@ -308,3 +308,4 @@ References
 ==========
 
 .. [#RFC2119] `Key words for use in RFCs to Indicate Requirement Levels <https://tools.ietf.org/html/rfc2119>`_
+.. [#bolt-paper] _`BOLT paper <https://eprint.iacr.org/2016/701>`_
