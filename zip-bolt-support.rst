@@ -167,20 +167,19 @@ The customer's closing transaction is described below.
 * ``txout`` count: 2
 * ``txouts``:
 
-  * ``to_customer``: a timelocked (using ``OP_CSV``) P2SH output sending funds back to the customer.
+  * ``to_customer``: a timelocked WTP output sending funds back to the customer with a time delay.
       - ``amount``: balance paid back to customer
       - ``nSequence: <time-delay>``
-      - ``scriptPubKey: 0 <32-byte-hash>``
-      - ``scriptSig: (empty)``
+      - ``scriptPubKey: PROGRAM PUSHDATA( <bolt_script> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  ) ``
 
-  * ``to_merchant``: A P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
-      * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
+  * ``to_merchant``: A WTP output to merch-pubkey output (sending funds back to the merchant), i.e.
+      * ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_script> || <merch-sig> )``
 
 To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with the customer signature after a time delay as follows:
 
-	``1 <cust-sig> 0 <serializedScript>``
+	``PROGRAM PUSHDATA( <bolt_script> || <<revocation> || <cust-sig>> || <time-delay>> )``
 
-where the ``serializedScript`` is as follows
+where the ``<bolt_script>`` is specified as follows (expressed in ``Script`` for convenience):
 
 	``OP_IF``
 	  ``<revocation-pubkey> <merch-pubkey> 2 OP_BOLT``
@@ -190,7 +189,7 @@ where the ``serializedScript`` is as follows
 
 In the event of a dispute, the merchant can redeem the ``to_customer`` by posting a transaction ``scriptSig`` as follows:
 
-	``<revocation-token> <merch-sig> 1``
+	``PROGRAM PUSHDATA( <bolt_script> || <<revocation-token> || <merch-sig>>)``
 
 2.2.2 Merchant closing transaction
 ----
