@@ -97,7 +97,7 @@ We assume the following specific features are present:
 	    - if customer-initiated closing, then verify the closing token and customer signature. In addition, checks that 2 new outputs are created, with the specified balances, each paying a ``bolt_cust_spend`` WTP containing the revocation hash and the respective pubkey
 	    - if merchant-initiated closing, then verify the merchant signature and customer signature. In addition, checks that ...
 
-    * ``bolt_merch_spend`` program (for merchant dispute of customer closure token). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
+    * ``bolt_spend`` program (for merchant dispute of customer closure token). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
 
 **Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final splitting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of WTPs.
 
@@ -264,7 +264,7 @@ The merchant can initiate closing by posting the initial closing transaction fro
 Rationale
 ---------
 
-TODO: explain logic here with reference to Bolt paper.
+TODO: ZIPs defining new program types MUST include a section explaining how any potential sources of malleability are handled.
 
 Reference Implementation
 ========================
