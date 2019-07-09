@@ -187,7 +187,7 @@ To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with
 
 	``PROGRAM PUSHDATA( <bolt_spend> || <<customer> || <cust-sig> || <block-height>> )``
 
-where the ``witness`` consists of a first byte ``0x0`` to indicate customer spend followed by the customer signature and the current block height (used to ensure that timeout reached) and where the ``<bolt_cust_spend>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
+where the ``witness`` consists of a first byte ``0x0`` to indicate customer spend followed by the customer signature and the current block height (used to ensure that timeout reached) and where the ``<bolt_spend>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
 	``OP_IF``
 	  ``<revocation-pubkey> <merch-pubkey> 2 OP_BOLT``
