@@ -179,9 +179,9 @@ The customer's closing transaction is described below.
 
 To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with the customer signature after a time delay as follows:
 
-	``PROGRAM PUSHDATA( <bolt_script> || <<revocation> || <cust-sig>> || <time-delay>> )``
+	``PROGRAM PUSHDATA( <bolt_script> || <<cust-sig> || <time-delay>> )``
 
-where the ``<bolt_script>`` is specified as follows (expressed in ``Script`` for convenience):
+where the ``<bolt_script>`` type is specified as follows (expressed in ``Script`` for convenience):
 
 	``OP_IF``
 	  ``<revocation-pubkey> <merch-pubkey> 2 OP_BOLT``
