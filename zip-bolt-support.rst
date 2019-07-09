@@ -170,10 +170,12 @@ The customer's closing transaction is described below.
   * ``to_customer``: a timelocked WTP output sending funds back to the customer with a time delay.
       - ``amount``: balance paid back to customer
       - ``nSequence: <time-delay>``
-      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_script> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  ) ``
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_script> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  )``
 
   * ``to_merchant``: A WTP output to merch-pubkey output (sending funds back to the merchant), i.e.
-      * ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_script> || <merch-sig> )``
+      * ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_script> || <merch-pubkey> )``
+      * ``amount``: balance paid to merchant
+      * ``nSequence``: 0
 
 To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with the customer signature after a time delay as follows:
 
