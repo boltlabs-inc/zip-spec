@@ -84,17 +84,18 @@ We assume the following specific features are present:
 (6) ``OP_BOLT`` opcode logic expressed as WTPs: a transparent program that takes as input a predicate, witness and context then outputs a ``True`` or ``False`` on the stack. Below is the logic for the two transparent programs:
 
     * ``bolt_close`` program (for customer-initiated or merchant-initiated close). This program is structured as follows:
-        (a) ``predicate``: the customer and merchant public keys along with the channel token (which comprises the initial balances and optionally, the initial wallet commitment)
+    
+        (a) ``predicate``: the customer and merchant public keys along with the channel token (which comprises public parameters, the initial balances and optionally, the initial wallet commitment)
 	(b) ``witness``: consists of three arguments: first argument indicates whether the customer or merchant initiated close and is represented by a single byte (``0x0`` or ``0x1``).
 	
 	    - if the customer-initiated close, then the subsequent bytes are interpreted as a **closing token** and **customer signature**.
-	    - if the merchant-initiated close, then the subsequent bytes are interpreted as a standard multi-sig parses two signatures for the **customer** and **merchant**.
+	    - if the merchant-initiated close, then the subsequent bytes are interpreted as a standard multi-sig and parses signatures for the **customer** and **merchant**.
 	    
 	(c) ``context``: the number of created outputs in the transaction, time delay and etc. (TODO: flesh this out) 
 	(d) ``verify_program`` logic:
 	
-	    - verify the signatures in terms of the closing token and customer signature
-	    - checks that 2 new outputs are created, with the specified balances, each paying a ``bolt_cust_spend`` WTP containing the revocation hash and the respective pubkey
+	    - if customer-initiated closing, then verify the closing token and customer signature. In addition, checks that 2 new outputs are created, with the specified balances, each paying a ``bolt_cust_spend`` WTP containing the revocation hash and the respective pubkey
+	    - if merchant-initiated closing, then verify the merchant signature and customer signature. In addition, checks that ...
 
     * ``bolt_merch_spend`` program (for merchant dispute of customer closure token). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
 
@@ -262,47 +263,6 @@ Rationale
 ---------
 
 TODO: explain logic here with reference to Bolt paper.
-
-3. Custom Shielded Tx: Using Z-addresses and Scriptless
--------------
-We assume the following features are present:
-
-(a) ``lock_time`` - for absolute lock time
-(b) A way to enforce relative lock time
-(c) 2-of-2 multi-sig shielded address support
-(d) All inputs/outputs are specified from/to a shielded address
-(e) A method to encumber the outputs of a shielded transaction
-(f) An extension to the transaction format to include BOLT (e.g., like ``vBoltDescription``)
-(g) Extend the ``SIGHASH`` flags to cover the extended field
-
-The goal here is to perform all the same validation steps for channel opening/closing without relying on the scripting system, as well as allowing for relative timelocks (the equivalent of ``OP_CSV``). In order to support multihop payments, we need absolute timelocks as well (the equivalent of ``OP_CLTV``). We also want to ensure that transactions are non-malleable in order to allow for unconfirmed dependency transaction chains.
-
-**Limitations/Notes**. With extensions to shielded transaction format, it may be evident whenever parties are establishing private payment channels. We appreciate feedback on the feasibility of what is proposed for each aspect of the Bolt protocol.
-
-**Channel Opening**. The customer creates a funding transaction that spends ZEC from a shielded address to a 2-of-2 multi-sig shielded address. Here is the flow (1) creating a multisig shielded address specifying both parties keys and (2) generating channel tokens.
-
-3.1 Funding Transaction
--------------
-This transaction has 2 shielded inputs (but can be up to some N) and 1 output to a 2-of-2 shielded address. If a ``vBoltDescription`` field is added, then we could use it to store the channel parameters and the channel token for opening the channel.
-
-3.2 Closing Transaction
--------------
-The initial wallet commitment will spend from the shielded address to two shielded outputs.  The first shielded output pays the customer with a timelock (or the merchant with a revocation token) and the second shielded output allows the merchant to spend immediately. It is not clear to us whether it will be possible to encumber the outputs of shielded outputs directly.
-
-Feedback from @Str4d on how we could encumber shielded outputs:
-
-* The encumbered output would contain a commitment to the various Bolt parameters (the timelock, the revocation token, etc).
-     * Without changing the Sapling circuit, the commitment would be added to a global Merkle tree in parallel to the current Sapling Merkle tree (meaning that they don't have a shared privacy set).
-     * If the Sapling circuit was altered, the privacy sets could potentially be shared, at the cost of requiring all Sapling users to be aware of Bolt semantics. IMHO this probably isn't worth the cost of doing such a change, but we could consider it during a later general programmability solution.
-     * The parameters themselves would probably also be included directly in the transaction in an encrypted field (as we do for shielded notes).
-
-* The spend using that output would contain a proof using the Bolt circuit, and the necessary public inputs such as the "time" at which the proof was created (perhaps stored in the locktime field).
-     * The circuit would enforce the equivalent of the OP_BOLT logic, allowing a valid proof to be created if the prover had knowledge of the revocation key and merchant key, OR the prover had knowledge of the customer key AND the public time input was past the committed timelock. It would also enforce all the necessary peripherial checks (the parameters match the original commitment, there exists a Merkle path from the original commitment to a specified public anchor, etc.).
-     * Network nodes would validate the Bolt-specific proof, and also validate the public inputs (if necessary, e.g. the locktime field is already enforced by the network).
-
-3.3 Channel Closing
--------------
-The channel closing consists of the customer broadcasting the most recent commitment transaction and requires that they present the closure token necessary to claim the funds. Similarly, the merchant would be able to claim the funds with the appropriate revocation token as well.
 
 Reference Implementation
 ========================
