@@ -29,18 +29,18 @@ Layer 2 protocols like Lightning enable scalable payments for Bitcoin but lack t
 Specification
 =============
 
-This specification details two potential approaches to integrating the features of Bolt into Zcash and depends on a ZIP that introduces Whitelisted Transparent Programs (WTPs) [#wtp-programs]_.
+This specification details an initial approach to integrating the features of Bolt into Zcash in a future network upgrade and depends on the WTP ZIP [#wtp-programs]_ that introduces Whitelisted Transparent Programs (WTPs).
 
 1. General requirements for Bolt protocol
 --------------------------
 
-Private payment channels as designed by the Bolt protocol require the following capabilities to achieve the stated anonymity properties at layer 2:
+Bolt private payment channels require the following capabilities to provide anonymity properties for users on a payment network:
 
-(1) Ability to create a funding transaction such that the transaction inputs are anonymous.
-(2) Ability to escrow funds to a multi-signature address with a fix for transaction malleability.
-(3) Ability to do relative time locks for commitment transactions to support unilateral channel closing.
-(4) Ability to do absolute and relative time locks to support multi-hop payments.
-(5) Ability to validate Bolt-specific commitment opening message and closing signature using WTPs:
+(1) Ability to create a escrow transaction such that the transaction inputs are anonymous.
+(2) Ability to escrow funds to a multi-signature style address via non-malleable transactions.
+(3) Ability to specify relative time locks for commitment transactions to support unilateral channel closing.
+(4) Ability to specify absolute and relative time locks to support HTLCs for multi-hop payments.
+(5) Ability to validate Bolt-specific commitment opening message and closing signatures:
 
     - check the validity of the commitment opening
     - check the validity of randomized/blinded signature on the wallet commitment in closure token
@@ -81,7 +81,7 @@ We assume the following specific features are present:
 (3) Can specify shielded inputs and outputs
 (4) Support for whitelisted transparent programs (WTPs) that enables 2-of-2 multi-sig style transactions
 (5) A non-SegWit approach that enables transaction non-malleability
-(6) ``OP_BOLT`` opcode logic expressed as WTPs: a transparent program that takes as input a predicate, witness and context then outputs a ``True`` or ``False`` on the stack. Below is the logic for the two transparent programs:
+(6) ``OP_BOLT`` logic expressed as WTPs: a transparent program that takes as input a predicate, witness and context then outputs a ``True`` or ``False`` on the stack. Below is the logic for the transparent programs:
 
     * ``bolt_close`` program (for customer-initiated or merchant-initiated close). This program is structured as follows:
     
@@ -168,7 +168,7 @@ The customer's closing transaction is described below.
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <bolt_close> || <<customer> || <closing-token> || <cust-sig>> )``
+   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <bolt_close> || <<customer> || <close-token> || <cust-sig>> )``
 
 * ``txout`` count: 2
 * ``txouts``:
@@ -178,8 +178,8 @@ The customer's closing transaction is described below.
       - ``nSequence: <time-delay>``
       - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_cust_spend> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  )``
 
-  * ``to_merchant``: A WTP output to merch-pubkey output (sending funds back to the merchant), i.e.
-      * ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_cust_spend> || <merch-pubkey> )``
+  * ``to_merchant``: a P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
+      * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
       * ``amount``: balance paid to merchant
       * ``nSequence``: 0
 
