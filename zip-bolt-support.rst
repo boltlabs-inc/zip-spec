@@ -79,9 +79,9 @@ We assume the following specific features are present:
 (1) Support for whitelisted transparent programs (WTPs) that enables 2-of-2 multi-sig style transactions
 (2) Can specify absolute lock time in transaction
 (3) Can specify relative lock time in transparent program
-(3) Can specify shielded inputs and outputs
-(4) A non-SegWit approach that fixes transaction malleability
-(5) ``OP_BOLT`` logic expressed as WTPs: transparent programs take as input a predicate, witness and context then outputs a ``True`` or ``False`` on the stack. Below is the logic for the transparent programs:
+(4) Can specify shielded inputs and outputs
+(5) A non-SegWit approach that fixes transaction malleability
+(6) ``OP_BOLT`` logic expressed as WTPs: transparent programs take as input a predicate, witness and context then outputs a ``True`` or ``False`` on the stack. Below is the logic for the transparent programs:
 
     * ``bolt_close`` program (for customer-initiated or merchant-initiated close). This program is structured as follows:
     
