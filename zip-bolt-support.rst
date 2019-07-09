@@ -135,7 +135,7 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 transpare
 
   - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_close> || <<cust-pubkey> <merch-pubkey> <channel-token>> )``
 
-where the ``<bolt_close>`` type refers to the following program (expressed in ``Script`` for convenience):
+where the ``<bolt_close>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
 	OP_IF
 	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG
@@ -170,18 +170,18 @@ The customer's closing transaction is described below.
   * ``to_customer``: a timelocked WTP output sending funds back to the customer with a time delay.
       - ``amount``: balance paid back to customer
       - ``nSequence: <time-delay>``
-      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_script> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  )``
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_cust_script> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  )``
 
   * ``to_merchant``: A WTP output to merch-pubkey output (sending funds back to the merchant), i.e.
-      * ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_script> || <merch-pubkey> )``
+      * ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_cust_script> || <merch-pubkey> )``
       * ``amount``: balance paid to merchant
       * ``nSequence``: 0
 
 To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with the customer signature after a time delay as follows:
 
-	``PROGRAM PUSHDATA( <bolt_script> || <<cust-sig> || <time-delay>> )``
+	``PROGRAM PUSHDATA( <bolt_cust_script> || <<customer> || <cust-sig> || <time-delay>> )``
 
-where the ``<bolt_script>`` type is specified as follows (expressed in ``Script`` for convenience):
+where the ``<bolt_cust_script>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
 	``OP_IF``
 	  ``<revocation-pubkey> <merch-pubkey> 2 OP_BOLT``
@@ -191,7 +191,7 @@ where the ``<bolt_script>`` type is specified as follows (expressed in ``Script`
 
 In the event of a dispute, the merchant can redeem the ``to_customer`` by posting a transaction ``scriptSig`` as follows:
 
-	``PROGRAM PUSHDATA( <bolt_script> || <<revocation-token> || <merch-sig>>)``
+	``PROGRAM PUSHDATA( <bolt_script> || <<merchant> || <revocation-token> || <merch-sig>>)``
 
 2.2.2 Merchant closing transaction
 ----
@@ -209,11 +209,12 @@ The merchant can create their own initial closing transaction as follows.
 * ``txout`` count: 1
 * ``txouts``:
 
-  * ``to_merchant``: a timelocked (using ``OP_CSV``) P2SH output sending all the funds back to the merchant. So ``scriptPubKey`` is of the form ``0 <32-byte-hash>``.
+  * ``to_merchant``: a timelocked WTP output sending all the funds in the channel back to the merchant with a time delay
       - ``amount``: balance paid back to merchant
       - ``nSequence: <time-delay>``
-      - ``script sig: 1 <merch-sig> 0 <serializedScript>``
-      - ``serializedScript``:
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_merch_script> || <<cust-pubkey> || <merch-pubkey> )``
+
+where the ``<bolt_merch_script>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
 		OP_IF
 	  	  <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT
