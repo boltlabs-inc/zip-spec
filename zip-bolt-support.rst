@@ -226,7 +226,7 @@ After each payment on the channel, the customer obtains a closing token for the 
 
 2.3 Channel Closing
 -------------
-To close the channel, the customer can initiate by posting the most recent closing transaction (in Section 2.3) that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode in mode 1. This consists of a closing token (i.e., merchant signature on the wallet state) or an opening of the initial wallet commitment (if there were no payments on the channel via mode 2).
+To close the channel, the customer can initiate by posting the most recent closing transaction that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode in mode 1. This consists of a closing token (i.e., merchant signature on the wallet state) or an opening of the initial wallet commitment (if there were no payments on the channel).
 
 Once the timeout has been reached, the customer can post a transaction that claims the output of the customer closing transaction to a shielded output (see below for an example). Before the timeout, the merchant can claim the funds from the ``to_customer`` output by posting a revocation token, if they have one.
 
@@ -251,7 +251,7 @@ Because we do not know how to encumber the outputs of shielded outputs right now
    - ``outCiphertext``: encrypted output note (part 2)
    - ``zkproof``: zero-knowledge proof for the note
 
-The merchant can initiate closing by posting the initial closing transaction (in Section 2.3) from establishing the channel that pays the merchant the full balance of the channel with a time lock that allows for customer dispute. The merchant can then post a separate standard transaction that moves those funds to a shielded address.
+The merchant can initiate closing by posting the initial closing transaction from establishing the channel that pays the merchant the full balance of the channel with a time lock that allows for customer dispute. After the time delay, the merchant can then post a separate standard transaction that moves the claimed funds to a shielded address.
 
 3. Custom Shielded Tx: Using Z-addresses and Scriptless
 -------------
