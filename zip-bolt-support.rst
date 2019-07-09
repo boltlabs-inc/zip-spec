@@ -107,7 +107,7 @@ We assume the following specific features are present:
 -------------
 The funding transaction is by default funded by only one participant, the customer. We will be extending the protocol to allow for dual-funded channels.
 
-This transaction has 2 shielded inputs (but can be up to some N) and 1 output to a P2SH address (to a 2-of-2 multi-sig address) with the merchant public key. Note that the customer can specify as many shielded inputs as necessary to fund the channel sufficiently (limited only by the overall transaction size).
+This transaction has 2 shielded inputs (but can be up to some N) and 1 transparent output with a WTP and the predicate is the customer and merchant public keys. Note that the customer can specify as many shielded inputs as necessary to fund the channel sufficiently (limited only by the overall transaction size).
 
 * ``lock_time``: 0
 * ``nExpiryHeight``: 0
@@ -131,11 +131,11 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 output to
   - ``zkproof``: zero-knowledge proof for the note
   - ``spendAuthSig``: signature authorizing the spend
 * ``tx_out_count``: 1
-* ``tx_out``: (using a P2SH address)
+* ``tx_out``: (via a transparent program)
 
-  - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_open> || <version> <cust-pubkey> <merch-pubkey> )``
+  - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_close> || <<cust-pubkey> <merch-pubkey> <channel-token>> )``
 
-where ``<bolt_open>`` predicate is as follows (expressed in ``Script`` for convenience):
+where the ``<bolt_close>`` type refers to the following program (expressed in ``Script`` for convenience):
 
 	OP_IF
 	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG
@@ -162,8 +162,7 @@ The customer's closing transaction is described below.
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <<channel-token> <closing-token>> <cust-sig> <OP_IF 2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG OP_ELSE <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT OP_ENDIF>
-   - ``txin[0]`` scriptSig: ``PROGRAM PUSHDATA( <bolt_close> || <closing-token> <cust-sig> )``
+   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <bolt_close> || <<customer> || <closing-token> || <cust-sig>> )``
 
 * ``txout`` count: 2
 * ``txouts``:
@@ -204,7 +203,7 @@ The merchant can create their own initial closing transaction as follows.
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: 0 <cust-sig> <merch-sig> <2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG>
+   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <bolt_close> || <<merchant> || <cust-sig> || <merch-sig>> )``
 
 * ``txout`` count: 1
 * ``txouts``:
