@@ -71,17 +71,17 @@ A customer should be able to close the channel by either opening the initial wal
 
 A merchant should be able to close the channel by either posting their closing token or, if the customer posts an outdated version of their closure token (or opens the initial wallet commitment for the channel after one or more payments have been made), a revocation token.
 
-2. Transparent/Shielded Tx: Using T/Z-addresses and Scripting Opcodes
+2. Transparent/Shielded Tx: Using T/Z-addresses and WTPs
 -------------
 
 We assume the following specific features are present:
 
-(1) ``OP_CLTV`` - absolute lock time
-(2) ``OP_CSV`` - relative lock time
+(1) Support for whitelisted transparent programs (WTPs) that enables 2-of-2 multi-sig style transactions
+(2) Can specify absolute lock time in transaction
+(3) Can specify relative lock time in transparent program
 (3) Can specify shielded inputs and outputs
-(4) Support for whitelisted transparent programs (WTPs) that enables 2-of-2 multi-sig style transactions
-(5) A non-SegWit approach that enables transaction non-malleability
-(6) ``OP_BOLT`` logic expressed as WTPs: a transparent program that takes as input a predicate, witness and context then outputs a ``True`` or ``False`` on the stack. Below is the logic for the transparent programs:
+(4) A non-SegWit approach that fixes transaction malleability
+(5) ``OP_BOLT`` logic expressed as WTPs: transparent programs take as input a predicate, witness and context then outputs a ``True`` or ``False`` on the stack. Below is the logic for the transparent programs:
 
     * ``bolt_close`` program (for customer-initiated or merchant-initiated close). This program is structured as follows:
     
