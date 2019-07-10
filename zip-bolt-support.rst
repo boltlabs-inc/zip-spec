@@ -83,7 +83,7 @@ We assume the following specific features are present:
 (5) A non-SegWit approach that fixes transaction malleability
 (6) ``OP_BOLT`` logic expressed as WTPs: transparent programs take as input a predicate, witness and context then outputs a ``True`` or ``False`` on the stack. Below is the logic for the transparent programs:
 
-    * ``bolt_close`` program (for customer-initiated or merchant-initiated close). This program is structured as follows:
+    * ``open-channel`` program (for customer-initiated or merchant-initiated close). The purpose of this WTP is to encumber the funding transaction such that either party can spend from the transaction: (1) the customer can initiate close with a closure token (from merchant) and a customer signature, or (2) the merchant can initiate close with a customer signature and merchant signature. The program is structured as follows:
     
         (a) ``predicate``: the customer and merchant public keys along with the channel token (which consists of the public parameters, the initial balances and optionally, the initial wallet commitment)
 	(b) ``witness``: consists of three arguments: first argument indicates whether **the customer or merchant initiated close** and is represented by a single byte (``0x0`` or ``0x1``). The second and third argument are signatures.
@@ -94,10 +94,10 @@ We assume the following specific features are present:
 	(c) ``context``: the number of created outputs in the transaction, time delay and etc. (TODO: flesh this out) 
 	(d) ``verify_program`` logic:
 	
-	    - if customer-initiated closing, then verify the closing token and customer signature. In addition, checks that 2 new outputs are created, with the specified balances, each paying a ``bolt_cust_spend`` WTP containing the revocation hash and the respective pubkey
-	    - if merchant-initiated closing, then verify the merchant signature and customer signature. In addition, checks that ...
+	    - if the customer-initiated closing, then verify the closing token and customer signature. In addition, the algorithm checks that 2 new outputs are created, with the specified balances, each paying a ``bolt_spend`` WTP containing the revocation hash and the respective pubkey.
+	    - if the merchant-initiated closing, then verify the merchant signature and customer signature. In addition, check that there is a timelock to give the customer sufficient time to dispute the transaction.
 
-    * ``bolt_spend`` program (for merchant dispute of customer closure token). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
+    * ``bolt_dispute`` program (for merchant dispute of customer closure token or customer dispute of merchant initiated closing). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
 
 **Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final splitting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of WTPs.
 
@@ -139,7 +139,7 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 transpare
 * ``tx_out_count``: 1
 * ``tx_out``: (via a transparent program)
 
-  - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_close> || <<cust-pubkey> || <merch-pubkey> || <channel-token>> )``
+  - ``scriptPubKey``: ``PROGRAM PUSHDATA( <open-channel> || <<cust-pubkey> || <merch-pubkey> || <channel-token>> )``
 
 where the ``<bolt_close>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
@@ -168,7 +168,7 @@ The customer's closing transaction is described below.
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <bolt_close> || <<customer> || <close-token> || <cust-sig>> )``
+   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <open-channel> || <<customer> || <close-token> || <cust-sig>> )``
 
 * ``txout`` count: 2
 * ``txouts``:
@@ -176,7 +176,7 @@ The customer's closing transaction is described below.
   * ``to_customer``: a timelocked WTP output sending funds back to the customer with a time delay.
       - ``amount``: balance paid back to customer
       - ``nSequence: <time-delay>``
-      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_spend> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  )``
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <cust-close> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  )``
 
   * ``to_merchant``: a P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
       * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
@@ -185,7 +185,7 @@ The customer's closing transaction is described below.
 
 To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with the customer signature after a time delay as follows:
 
-	``PROGRAM PUSHDATA( <bolt_spend> || <<customer> || <cust-sig> || <block-height>> )``
+	``PROGRAM PUSHDATA( <cust-close> || <<customer> || <cust-sig> || <block-height>> )``
 
 where the ``witness`` consists of a first byte ``0x0`` to indicate customer spend followed by the customer signature and the current block height (used to ensure that timeout reached) and where the ``<bolt_spend>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
@@ -197,7 +197,7 @@ where the ``witness`` consists of a first byte ``0x0`` to indicate customer spen
 
 In the event of a dispute, the merchant can redeem the ``to_customer`` output by posting a transaction and presents a ``scriptSig`` as follows:
 
-	``PROGRAM PUSHDATA( <bolt_spend> || <<merchant> || <revocation-token> || <merch-sig>> )``
+	``PROGRAM PUSHDATA( <cust-close> || <<merchant> || <revocation-token> || <merch-sig>> )``
 
 where the ``witness`` consists of a first byte ``0x1`` to indicate merchant spend followed by the revocation token and the merchant signature.
 
@@ -212,7 +212,7 @@ The merchant can create their own initial closing transaction as follows.
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <bolt_close> || <<merchant> || <cust-sig> || <merch-sig>> )``
+   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <merch-close> || <<merchant> || <cust-sig> || <merch-sig>> )``
 
 * ``txout`` count: 1
 * ``txouts``:
@@ -220,7 +220,7 @@ The merchant can create their own initial closing transaction as follows.
   * ``to_merchant``: a timelocked WTP output sending all the funds in the channel back to the merchant with a time delay
       - ``amount``: balance paid back to merchant
       - ``nSequence: <time-delay>``
-      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <bolt_spend> || <<merch-pubkey> || <cust-pubkey>> )``
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <merch-close> || <<merch-pubkey> || <cust-pubkey>> )``
 
 where the ``<bolt_spend>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
