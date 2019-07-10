@@ -203,7 +203,7 @@ where the ``witness`` consists of a first byte ``0x1`` to indicate merchant spen
 
 2.2.2 Merchant closing transaction
 ----
-The merchant can create their own initial closing transaction as follows.
+The merchant can create their own initial closing transaction as follows and obtain the customer signature during the establishment phase.
 
 * ``version``: specify version number
 * ``groupid``: specify group id
@@ -218,7 +218,7 @@ The merchant can create their own initial closing transaction as follows.
 * ``txouts``:
 
   * ``to_merchant``: a timelocked WTP output sending all the funds in the channel back to the merchant with a time delay
-      - ``amount``: balance paid back to merchant
+      - ``amount``: full balance paid back to merchant
       - ``nSequence: <time-delay>``
       - ``scriptPubKey``: ``PROGRAM PUSHDATA( <merch-close> || <<merch-pubkey> || <cust-pubkey>> )``
 
