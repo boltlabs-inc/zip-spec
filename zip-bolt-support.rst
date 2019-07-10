@@ -141,7 +141,7 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 transpare
 
   - ``scriptPubKey``: ``PROGRAM PUSHDATA( <open-channel> || <<cust-pubkey> || <merch-pubkey> || <channel-token>> )``
 
-where the ``<bolt_close>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
+where the ``<open-channel>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
 	OP_IF
 	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG
@@ -187,7 +187,7 @@ To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with
 
 	``PROGRAM PUSHDATA( <cust-close> || <<customer> || <cust-sig> || <block-height>> )``
 
-where the ``witness`` consists of a first byte ``0x0`` to indicate customer spend followed by the customer signature and the current block height (used to ensure that timeout reached) and where the ``<bolt_spend>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
+where the ``witness`` consists of a first byte ``0x0`` to indicate customer spend followed by the customer signature and the current block height (used to ensure that timeout reached) and where the ``<cust-close>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
 	``OP_IF``
 	  ``<revocation-pubkey> <merch-pubkey> 2 OP_BOLT``
@@ -212,7 +212,7 @@ The merchant can create their own initial closing transaction as follows.
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <merch-close> || <<merchant> || <cust-sig> || <merch-sig>> )``
+   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <open-channel> || <<merchant> || <cust-sig> || <merch-sig>> )``
 
 * ``txout`` count: 1
 * ``txouts``:
@@ -222,7 +222,7 @@ The merchant can create their own initial closing transaction as follows.
       - ``nSequence: <time-delay>``
       - ``scriptPubKey``: ``PROGRAM PUSHDATA( <merch-close> || <<merch-pubkey> || <cust-pubkey>> )``
 
-where the ``<bolt_spend>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
+where the ``<merch-close>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
 		OP_IF
 	  	  <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT
