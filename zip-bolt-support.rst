@@ -85,8 +85,8 @@ We assume the following specific features are present:
 
     * ``bolt_close`` program (for customer-initiated or merchant-initiated close). This program is structured as follows:
     
-        (a) ``predicate``: the customer and merchant public keys along with the channel token (which comprises public parameters, the initial balances and optionally, the initial wallet commitment)
-	(b) ``witness``: consists of three arguments: first argument indicates whether **the customer or merchant initiated close** and is represented by a single byte (``0x0`` or ``0x1``). the second and third argument are signatures.
+        (a) ``predicate``: the customer and merchant public keys along with the channel token (which consists of the public parameters, the initial balances and optionally, the initial wallet commitment)
+	(b) ``witness``: consists of three arguments: first argument indicates whether **the customer or merchant initiated close** and is represented by a single byte (``0x0`` or ``0x1``). The second and third argument are signatures.
 	
 	    - if the customer-initiated close, then the subsequent bytes are interpreted as a **closing token** and **customer signature**.
 	    - if the merchant-initiated close, then the subsequent bytes are interpreted as a standard multi-sig and parses signatures for the **customer** and **merchant**.
