@@ -81,9 +81,24 @@ We assume the following specific features are present:
 (3) Can specify relative lock time in transparent program
 (4) Can specify shielded inputs and outputs
 (5) A non-SegWit approach that fixes transaction malleability
-(6) ``OP_BOLT`` logic expressed as WTPs: transparent programs take as input a predicate, witness and context then outputs a ``True`` or ``False`` on the stack. Below is the logic for the transparent programs:
+(6) ``OP_BOLT`` logic expressed as WTPs. We will use the Bolt WTPs defined in section 2.1: ``open-channel`` and ``close-channel``.
 
-    * ``open-channel`` program (for customer-initiated or merchant-initiated close). The purpose of this WTP is to encumber the funding transaction such that either party can spend from the transaction: (1) the customer can initiate close with a closure token (from merchant) and a customer signature, or (2) the merchant can initiate close with a customer signature and merchant signature. The program is structured as follows:
+**Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final splitting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of WTPs.
+
+**Channel Opening**. The customer creates a funding/escrow transaction that spends ZEC from a shielded address to a transparent output that is encumbered by a Bolt transparent program. See section 2.1 for what the funding transaction looks like when instantiated using WTPs.
+
+**Token Descriptions**. There are three types of tokens described in this section: (1) channel token, (2) closure token, and (3) revocation token.
+
+(a) *Channel token*: this consists of public keys from the customer and merchant for the channel and a long-lived public key for the merchant. It also includes the initial customer balance and optionally, the wallet commitment.
+(b) *Closure token*: for the customer, this consists of the wallet (i.e., the channel public key, wallet public key, current channal balance, total channel balance), and a closure signature (i.e., blinded sig) on the wallet.
+(c) *Revocation token*: this consists of a wallet public key and a corresponding revocation signature.
+
+2.1 Bolt WTPs
+--------------
+
+The transparent programs take as input a ``predicate``, ``witness`` and ``context`` and then output a ``True`` or ``False`` on the stack. Oult Bolt-specific transparent program is deterministic and any malleation of the ``witness`` will result in a ``False`` output. The WTPs are as follows:
+
+1. ``open-channel`` program (for customer-initiated or merchant-initiated close). The purpose of this WTP is to encumber the funding transaction such that either party can spend from the transaction: (1) the customer can initiate close with a closure token (from merchant) and a customer signature, or (2) the merchant can initiate close with a customer signature and merchant signature. The program is structured as follows:
     
         (a) ``predicate``: the customer and merchant public keys along with the channel token (which consists of the public parameters, the initial balances and optionally, the initial wallet commitment)
 	(b) ``witness``: consists of three arguments: first argument indicates whether **the customer or merchant initiated close** and is represented by a single byte (``0x0`` or ``0x1``). The second and third argument are signatures.
@@ -97,19 +112,11 @@ We assume the following specific features are present:
 	    - if the customer-initiated closing, then verify the closing token and customer signature. In addition, the algorithm checks that 2 new outputs are created, with the specified balances, each paying a ``bolt_spend`` WTP containing the revocation hash and the respective pubkey.
 	    - if the merchant-initiated closing, then verify the merchant signature and customer signature. In addition, check that there is a timelock to give the customer sufficient time to dispute the transaction.
 
-    * ``bolt_dispute`` program (for merchant dispute of customer closure token or customer dispute of merchant initiated closing). This mode is used in a merchant closing transaction to dispute a customer's closure token. The opcode expects a merchant revocation token. It validates the revocation token with respect to the wallet pub key posted by the customer in the customer's closing transaction. If valid, the customer's closure token will be invalidated and the merchant's closing transaction will be deemed valid.
+2. ``close-channel`` program. TODO: finish me.
 
-**Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final splitting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of WTPs.
 
-**Channel Opening**. The customer creates a funding/escrow transaction that spends ZEC from a shielded address to a transparent output that is encumbered by a Bolt transparent program. See section 2.1 for what the funding transaction looks like when instantiated using WTPs.
 
-**Token Descriptions**. There are three types of tokens described in this section: (1) channel token, (2) closure token, and (3) revocation token.
-
-(a) *Channel token*: this consists of public keys from the customer and merchant for the channel and a long-lived public key for the merchant. It also includes the initial customer balance and optionally, the wallet commitment.
-(b) *Closure token*: for the customer, this consists of the wallet (i.e., the channel public key, wallet public key, current channal balance, total channel balance), and a closure signature (i.e., blinded sig) on the wallet.
-(c) *Revocation token*: this consists of a wallet public key and a corresponding revocation signature.
-
-2.1 Funding Transaction
+2.2 Funding Transaction
 -------------
 The funding transaction is by default funded by only one participant, the customer. We will be extending the protocol to allow for dual-funded channels.
 
@@ -153,9 +160,9 @@ where the ``<open-channel>`` type corresponds to the following logic (expressed 
 
 The customer (in collaboration with the merchant) creates their initial closing transaction before sending the funding transaction to the network (since  the customer needs to know they can get their money back). Once both customer and merchant closing transactions have been created, the customer should broadcast the funding transaction and waits for the network to confirm the transaction. After the transaction has been confirmed, the payment channel is established.
 
-2.2 Closing Transactions
+2.3 Closing Transactions
 -------------
-2.2.1 Customer closing transaction
+2.3.1 Customer closing transaction
 ----
 The customer closing transaction is generated by the customer during the channel establishment but is not broadcast to the network. The customer's closing transaction (below) contains two outputs: (1) an output that can be spent immediately by the merchant and (2) another output that can be spent by either the customer after a relative timeout or the merchant with a revocation token. This approach allows the merchant to see the customer's closing transaction and spend the output with a revocation token if the customer posted an outdated closure token.
 
@@ -201,7 +208,7 @@ In the event of a dispute, the merchant can redeem the ``to_customer`` output by
 
 where the ``witness`` consists of a first byte ``0x1`` to indicate merchant spend followed by the revocation token and the merchant signature.
 
-2.2.2 Merchant closing transaction
+2.3.2 Merchant closing transaction
 ----
 The merchant can create their own initial closing transaction as follows and obtain the customer signature during the establishment phase.
 
@@ -232,7 +239,7 @@ where the ``<merch-close>`` type corresponds to the following logic (expressed i
 
 After each payment on the channel, the customer obtains a closing token for the updated channel balance and provides the merchant a revocation token for the previous state along with the associated wallet public key (this invalidates the pub key). If the customer initiated closing, the merchant can use the revocation token to spend the funds of the channel if the customer posts an outdated closing transaction.
 
-2.3 Channel Closing
+2.4 Channel Closing
 -------------
 To close the channel, the customer can initiate by posting the most recent closing transaction that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode in mode 1. This consists of a closing token (i.e., merchant signature on the wallet state) or an opening of the initial wallet commitment (if there were no payments on the channel).
 
