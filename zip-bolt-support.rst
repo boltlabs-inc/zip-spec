@@ -109,10 +109,10 @@ Transparent programs take as input a ``predicate``, ``witness`` and ``context`` 
 	(c) ``context``: the number of created outputs in the transaction, time delay and etc. (TODO: flesh this out) 
 	(d) ``verify_program`` logic:
 	
-	    - if the customer-initiated closing, then verify the closing token and customer signature. In addition, the algorithm checks that 2 new outputs are created, with the specified balances, each paying a ``bolt_spend`` WTP containing the revocation hash and the respective pubkey.
+	    - if the customer-initiated closing, then verify the closing token and customer signature. In addition, the algorithm checks that 2 new outputs are created, with the specified balances, each paying a ``close-channel`` WTP containing the revocation hash and the respective pubkey.
 	    - if the merchant-initiated closing, then verify the merchant signature and customer signature. In addition, check that there is a timelock to give the customer sufficient time to dispute the transaction.
 
-2. ``close-channel`` program. The purpose of this WTP is to enforce a relative timelock in addition to encumbering the output of a closing transaction such that either party can claim the funds after the timeout or in the event that the customer presents an outdated closure token. The program is specified as follows:
+2. ``close-channel`` program. The purpose of this WTP is to enforce a relative timelock in addition to encumbering the output of a closing transaction. The program is specified as follows:
 
          (a) ``predicate``:
 	 (b) ``witness``:
