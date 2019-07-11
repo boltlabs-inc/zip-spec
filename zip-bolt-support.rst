@@ -183,7 +183,7 @@ The customer's closing transaction is described below.
   * ``to_customer``: a timelocked WTP output sending funds back to the customer with a time delay.
       - ``amount``: balance paid back to customer
       - ``nSequence: <time-delay>``
-      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <cust-close> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  )``
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <close-channel> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  )``
 
   * ``to_merchant``: a P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
       * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
@@ -192,7 +192,7 @@ The customer's closing transaction is described below.
 
 To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with the customer signature after a time delay as follows:
 
-	``PROGRAM PUSHDATA( <cust-close> || <<customer> || <cust-sig> || <block-height>> )``
+	``PROGRAM PUSHDATA( <close-channel> || <<customer> || <cust-sig> || <block-height>> )``
 
 where the ``witness`` consists of a first byte ``0x0`` to indicate customer spend followed by the customer signature and the current block height (used to ensure that timeout reached) and where the ``<cust-close>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
@@ -202,9 +202,9 @@ where the ``witness`` consists of a first byte ``0x0`` to indicate customer spen
 	  ``<time-delay> OP_CSV OP_DROP <cust-pubkey> OP_CHECKSIGVERIFY``
 	``OP_ENDIF``
 
-In the event of a dispute, the merchant can redeem the ``to_customer`` output by posting a transaction and presents a ``scriptSig`` as follows:
+If the customer posted an outdated closing token, the merchant can redeem the ``to_customer`` output by posting a transaction with the following ``scriptSig``:
 
-	``PROGRAM PUSHDATA( <cust-close> || <<merchant> || <revocation-token> || <merch-sig>> )``
+	``PROGRAM PUSHDATA( <close-channel> || <<merchant> || <revocation-token> || <merch-sig>> )``
 
 where the ``witness`` consists of a first byte ``0x1`` to indicate merchant spend followed by the revocation token and the merchant signature.
 
@@ -227,9 +227,9 @@ The merchant can create their own initial closing transaction as follows and obt
   * ``to_merchant``: a timelocked WTP output sending all the funds in the channel back to the merchant with a time delay
       - ``amount``: full balance paid back to merchant
       - ``nSequence: <time-delay>``
-      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <merch-close> || <<merch-pubkey> || <cust-pubkey>> )``
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <close-channel> || <<merch-pubkey> || <cust-pubkey>> )``
 
-where the ``<merch-close>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
+where the ``<close-channel>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
 		OP_IF
 	  	  <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT
