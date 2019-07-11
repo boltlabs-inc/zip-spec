@@ -96,7 +96,7 @@ We assume the following specific features are present:
 2.1 Bolt WTPs
 --------------
 
-The transparent programs take as input a ``predicate``, ``witness`` and ``context`` and then output a ``True`` or ``False`` on the stack. Oult Bolt-specific transparent program is deterministic and any malleation of the ``witness`` will result in a ``False`` output. The WTPs are as follows:
+Transparent programs take as input a ``predicate``, ``witness`` and ``context`` and then output a ``True`` or ``False`` on the stack. Oult Bolt-specific transparent programs are deterministic and any malleation of the ``witness`` will result in a ``False`` output. The WTPs are as follows:
 
 1. ``open-channel`` program (for customer-initiated or merchant-initiated close). The purpose of this WTP is to encumber the funding transaction such that either party can spend from the transaction: (1) the customer can initiate close with a closure token (from merchant) and a customer signature, or (2) the merchant can initiate close with a customer signature and merchant signature. The program is structured as follows:
     
@@ -112,8 +112,12 @@ The transparent programs take as input a ``predicate``, ``witness`` and ``contex
 	    - if the customer-initiated closing, then verify the closing token and customer signature. In addition, the algorithm checks that 2 new outputs are created, with the specified balances, each paying a ``bolt_spend`` WTP containing the revocation hash and the respective pubkey.
 	    - if the merchant-initiated closing, then verify the merchant signature and customer signature. In addition, check that there is a timelock to give the customer sufficient time to dispute the transaction.
 
-2. ``close-channel`` program. TODO: finish me.
+2. ``close-channel`` program. The purpose of this WTP is to enforce a relative timelock in addition to encumbering the output of a closing transaction such that either party can claim the funds after the timeout or in the event that the customer presents an outdated closure token. The program is specified as follows:
 
+         (a) ``predicate``:
+	 (b) ``witness``:
+	 (c) ``context``:
+	 (d) ``verify_program``:
 
 
 2.2 Funding Transaction
@@ -204,9 +208,9 @@ where the ``witness`` consists of a first byte ``0x0`` to indicate customer spen
 
 If the customer posted an outdated closing token, the merchant can redeem the ``to_customer`` output by posting a transaction with the following ``scriptSig``:
 
-	``PROGRAM PUSHDATA( <close-channel> || <<merchant> || <revocation-token> || <merch-sig>> )``
+	``PROGRAM PUSHDATA( <close-channel> || <<merchant> || <merch-sig> || <revocation-token>> )``
 
-where the ``witness`` consists of a first byte ``0x1`` to indicate merchant spend followed by the revocation token and the merchant signature.
+where the ``witness`` consists of a first byte ``0x1`` to indicate merchant spend followed by the merchant signature and the revocation token.
 
 2.3.2 Merchant closing transaction
 ----
