@@ -40,36 +40,56 @@ Bolt private payment channels require the following capabilities to provide anon
 (2) Ability to escrow funds to a multi-signature style address via non-malleable transactions.
 (3) Ability to specify relative time locks for commitment transactions to support unilateral channel closing.
 (4) Ability to specify absolute and relative time locks to support HTLCs for multi-hop payments.
-(5) Ability to validate Bolt-specific commitment opening message and closing signatures:
+(5) Ability to validate Bolt-specific opening and closing transactions:
 
-    - check the validity of the commitment opening
-    - check the validity of randomized/blinded signature on the wallet commitment in closure token
-    - check the validity of revocation token signature in the event of a channel dispute by merchant
+    - check the validity of randomized/blinded signature on the wallet commitment in closing token
+    - check the validity of revocation token in the event of a channel dispute by merchant
 
-(6) Ability to verify the transaction output using WTPs such that:
+(6) Ability to verify transaction outputs using WTPs such that:
 
-    - if customer initiated closing, first output pays out to customer with a time lock (to allow merchant to dispute customer balance) and second output pays out to merchant immediately
-    - if merchant initiated closing, a single output that pays the merchant the full balance of the channel with a time lock that allows for customer dispute
+    - if customer-initiated closing, one output pays out to customer with a time lock (to allow merchant to dispute customer balance) and one output pays out to merchant immediately
+    - if merchant-initiated closing, a single output pays the merchant the full balance of the channel with a time lock that allows for customer dispute
 
 **Channel Operation Assumptions.**
- - Single-funded channel by customer with a minimum fee paid to the merchant.
+ - Channels funded by the customer alone and dual-funded channels are both supported.
  - Either the customer or the merchant can initiate channel closing.
- - If the customer initiates closing, then the merchant can dispute the closing transaction if they disagrees with the closure token in the closing transaction.
- - If the merchant initiates closing, the customer has the opportunity to post their own valid closing transaction. In this case, the merchant has an additional opportunity to validate this closing transaction and can dispute if necessary.
+ - If the customer initiates closing, then the merchant can dispute the closing transaction if they disagrees with the closing token in the closing transaction.
+ - If the merchant initiates closing, the merchant posts a transaction claiming all the funds in the channel for themselves with a timelock. This gives the customer the opportunity to post their own valid closing transaction with the current channel balances. If the customer posts their own closing transaction, the merchant has an additional opportunity to dispute if necessary.
 
-1.1 Conditions for Opening Channel
+1.1 Customer and Merchant Signing Keys
 -------------
 
-To open a channel, a customer picks a channel-specific public key, commits to an initial wallet, and receives a signature from the merchant (using their long-term keypair) on that wallet. A wallet consists of a wallet-specific public key, a customer balance, and a total channel balance, and is linked to the customer's channel-specific public key. The channel specific public key, initial customer balance, total channel balance, and initial wallet commitment comprise the customer's channel token.
+The customer and the merchant both have key pairs from a suitable signature scheme. These are denoted as:
+``<cust-pk>, <cust-sk>`` and 
+``<merch-pk>, <merch-sk>``, respectively, where ``pk`` stands for "public key" and ``sk`` stands for the corresponding "secret key".
 
-The keypairs used by both the merchant and the customer must support a blind signature scheme.
+The merchant must be able to issue blind signatures, so they have an additional keypair; this keypair is denoted as:
+``<MERCH-PK>, <MERCH-SK>``.
 
-1.2 Conditions for Closing Channel
+The customer key pair is specific to the channel and must not be reused. The merchant key pair is long term and should be used for all customer channels. 
+
+1.2 Wallets
+-------------
+A Bolt channel allows a customer to make or receive a sequence of payments off chain. These payments are tracked and validated using a sequence of *wallets*. A wallet consists of the customer's public key (which ties the wallet to the channel), a wallet-specific public key (which can be from any suitable signature scheme), denoted ``<wpk>``, and the current customer and merchant balances.
+
+After each payment, the customer receives an updated wallet and blind signatures from the merchant on the wallet contents allowing channel close as specified below.
+
+1.2 Opening a Channel: Overview
+-------------
+To open a channel, the customer and merchant exchange key information and set the channel token ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>``. 
+
+They agree on their respective initial balances ``initial-cust-balance`` and ``initial-merch-balance``.
+
+The customer picks an inital wallet public key ``<wpk>``.
+
+The customer and merchant escrow the necessary funds in a funding transaction, denoted ``escrow-tx``. 
+
+1.3 Closing a Channel: Overview
 -------------
 
-A customer should be able to close the channel by either opening the initial wallet commitment (if no payments made) or posting a closing token.
+A customer should be able to close the channel by posting a *closing token* ``close-token``, which is a blind signature from the merchant under ``<MERCH-PK>`` on a special closing wallet that contains ``<<cust-pk>, <wpk>, <balance-cust>, <balance-merch>, CLOSE>``.
 
-A merchant should be able to close the channel by either posting their closing token or, if the customer posts an outdated version of their closure token (or opens the initial wallet commitment for the channel after one or more payments have been made), a revocation token.
+A merchant should be able to close the channel by either posting a special closing transaction ``merch-close-tx`` (detailed below) or, if the customer posts an outdated version of their closing token, a signed revocation token, ``rev-token`` as detailed below. The revocation token ``rev-token`` is a signature under the wallet public key ``<wpk>`` on the special revocation message ``<<wpk> || REVOKED>``.
 
 2. Transparent/Shielded Tx: Using T/Z-addresses and WTPs
 -------------
@@ -81,22 +101,16 @@ We assume the following specific features are present:
 (3) Can specify relative lock time in transparent program
 (4) Can specify shielded inputs and outputs
 (5) A non-SegWit approach that fixes transaction malleability
-(6) ``OP_BOLT`` logic expressed as WTPs. We will use the Bolt WTPs defined in section 2.1: ``open-channel`` and ``close-channel``.
+(6) ``OP_BOLT`` logic expressed as WTPs. We will use the Bolt WTPs defined in section 2.1: ``open-channel``, ``cust-close``, and ``merch-close``.
 
-**Privacy Limitations**. The aggregate balance of the channel will be revealed in the 2-of-2 multisig transparent address. Similarly, the final splitting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remain hidden. Channel opening and closing will also be distinguishable on the network due to use of WTPs.
+**Privacy Limitations**. The aggregate balance of the channel will be revealed in the funding transaction ``escrow-tx``. Similarly, the final splitting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remains hidden. Channel opening and closing will also be distinguishable on the network due to use of WTPs.
 
-**Channel Opening**. The customer creates a funding/escrow transaction that spends ZEC from a shielded address to a transparent output that is encumbered by a Bolt transparent program. See section 2.1 for what the funding transaction looks like when instantiated using WTPs.
-
-**Token Descriptions**. There are three types of tokens described in this section: (1) channel token, (2) closure token, and (3) revocation token.
-
-(a) *Channel token*: this consists of public keys from the customer and merchant for the channel and a long-lived public key for the merchant. It also includes the initial customer balance and optionally, the wallet commitment.
-(b) *Closure token*: for the customer, this consists of the wallet (i.e., the channel public key, wallet public key, current channal balance, total channel balance), and a closure signature (i.e., blinded sig) on the wallet.
-(c) *Revocation token*: this consists of a wallet public key and a corresponding revocation signature.
+**Channel Opening**. The funding transaction ``escrow-tx`` spends ZEC from one or more shielded addresses to a transparent output that is encumbered by a Bolt transparent program. See Section 2.1 for what the funding transaction looks like when instantiated using WTPs.
 
 2.1 Bolt WTPs
 --------------
 
-Transparent programs take as input a ``predicate``, ``witness`` and ``context`` and then output a ``True`` or ``False`` on the stack. Oult Bolt-specific transparent programs are deterministic and any malleation of the ``witness`` will result in a ``False`` output. The WTPs are as follows:
+Transparent programs take as input a ``predicate``, ``witness`` and ``context`` and then output a ``True`` or ``False`` on the stack. Bolt-specific transparent programs are deterministic and any malleation of the ``witness`` will result in a ``False`` output. The WTPs are as follows:
 
 1. ``open-channel`` program (for customer-initiated or merchant-initiated close). The purpose of this WTP is to encumber the funding transaction such that either party can spend from the transaction: (1) the customer can initiate close with a closure token (from merchant) and a customer signature, or (2) the merchant can initiate close with a customer signature and merchant signature. The program is structured as follows:
     
