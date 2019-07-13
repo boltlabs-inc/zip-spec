@@ -114,25 +114,42 @@ We assume the following specific features are present:
 
 Transparent programs take as input a ``predicate``, ``witness``, and ``context`` and then output a ``True`` or ``False`` on the stack. Bolt-specific transparent programs are deterministic and any malleation of the ``witness`` will result in a ``False`` output. The WTPs are as follows:
 
-1. ``open_channel`` program. The purpose of this WTP is to encumber the funding transaction such that either party may initiate channel closing as detailed above in Section 1.3. The program is structured as follows:
-        a. ``predicate``: The predicate consists of ``<<channel-token> <merch-close-address>>``, where ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>`` contains three public keys, one for the customer and two for the merchant, and an address ``<merch-close-address>`` for the merchant at which to receive funds from a customer-initiated close.
-        b. ``witness``: The witness is defined as follows:
-                1. ``<balance-cust> <balance-merch> <cust-sig> <merch-sig>``
-                2. ``<balance-cust> <balance-merch> <cust-sig> <wpk> <closing-token>``
-        c. ``verify_program`` behaves as follows:
-                1. If witness is of the first type, check that 2 new outputs are created, with the specified balances (unless one of the balances is zero), and that the signatures verify.
-                2. If witness is of second type, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
-                    + one paying ``<balance-merch>`` to ``<merch-close-address>`` 
-                    + one paying a cust_close WTP containing ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``  and ``<channel-token>`` 
-            
-	           Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> <wpk> <balance-cust> <balance-merch> CLOSE>``.
+1. ``open-channel`` program. The purpose of this WTP is to encumber the funding transaction such that either party may initiate channel closing as detailed above in Section 1.3. The program is structured as follows:
+	a. ``predicate``: The predicate consists of ``<<channel-token> <merch-close-address>>``, where ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>`` contains three public keys, one for the customer and two for the merchant, and an address ``<merch-close-address>`` for the merchant at which to receive funds from a customer-initiated close.
+	b. ``witness``: The witness is defined as follows:
+		1. ``<balance-cust> <balance-merch> <cust-sig> <merch-sig>``
+ 		2. ``<balance-cust> <balance-merch> <cust-sig> <wpk> <closing-token>``
+ 	c. ``verify_program`` behaves as follows:
+		1. If witness is of the first type, check that 2 new outputs are created, with the specified balances (unless one of the balances is zero), and that the signatures verify.
+		2. If witness is of second type, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
+			+ one paying ``<balance-merch>`` to ``<merch-close-address>`` 
+			+ one paying a cust_close WTP containing ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``  and ``<channel-token>`` 
+			Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> <wpk> <balance-cust> <balance-merch> CLOSE>``.
 
-2. ``close-channel`` program. The purpose of this WTP is to enforce a relative timelock in addition to encumbering the output of a closing transaction. The program is specified as follows:
+2. ``cust-close`` program. The purpose of this WTP is to allow the customer to initiate channel closure as specified in Section 1.3. The program is specified as follows:
 
-         (a) ``predicate``:
-	 (b) ``witness``:
-	 (c) ``context``:
-	 (d) ``verify_program``:
+	a. ``predicate``: ``<wallet> <channel-token>``, where
+		1. ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``, and 
+ 		2. ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>``.
+	b. ``witness``: The witness is defined as one of the following:
+		1. ``<cust-sig>``
+		2. ``<merch-sig> <address> <rev-token>``
+	c. ``verify_program`` behaves as follows:
+		1. If witness is of the first type, check that ``<cust-sig>`` is valid and a relative timeout has been met
+		2. If witness is of second type, check that 1 output is created paying ``<balance-merch + balance-cust>`` to ``<address>``. Also check that ``<merch-sig>`` is a valid signature on ``<address> <rev-token>`` and that ``<rev-token>`` contains a valid signature under ``<wpk>`` on ``<<wpk> || REVOKED>``.
+
+3. ``merch-close``. The purpose of this WTP is to allow a merchant to initiate channel closure as specified in Section 1.3.
+	a. ``predicate``: ``<channel-token> <merch-close-address>``.
+	b. ``witness`` is defined as one of the following:
+		1. ``<merch-sig>``
+		2. ``<cust-sig> <<wpk> <balance-cust> <balance-merch>> <closing-token>``
+		3. ``verify_program`` behaves as follows:
+			1. If witness is of the first type, check that <merch-sig> is valid and a relative timeout has been met
+			2. If witness is of second type, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
+				+ one paying ``<balance-merch>`` to ``<merch-close-address>`` 
+ 				+ one paying a ``cust_close`` WTP containing ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``  and ``<channel-token>`` 
+				
+				Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> <wpk> <balance-cust> <balance-merch> CLOSE>``.
 
 
 2.2 Funding Transaction
