@@ -87,9 +87,11 @@ The customer and merchant escrow the necessary funds in a funding transaction, d
 1.3 Closing a Channel: Overview
 -------------
 
-A customer should be able to close the channel by posting a *closing token* ``close-token``, which is a blind signature from the merchant under ``<MERCH-PK>`` on a special closing wallet that contains ``<<cust-pk>, <wpk>, <balance-cust>, <balance-merch>, CLOSE>``.
+A customer should be able to close the channel by posting a *closing token* ``close-token``, which is a blind signature from the merchant under ``<MERCH-PK>`` on a special closing wallet that contains ``<<cust-pk>, <wpk>, <balance-cust>, <balance-merch>, CLOSE>``. We use ``cust-close-tx`` to denote the transaction posted by the customer to initiate channel closure.
 
-A merchant should be able to close the channel by either posting a special closing transaction ``merch-close-tx`` (detailed below) or, if the customer posts an outdated version of their closing token, a signed revocation token, ``rev-token`` as detailed below. The revocation token ``rev-token`` is a signature under the wallet public key ``<wpk>`` on the special revocation message ``<<wpk> || REVOKED>``.
+A merchant should be able to close the channel by either posting a special closing transaction ``merch-close-tx`` (detailed below) or, if the customer posts an outdated version of their closing token, a signed revocation token, ``rev-token`` as detailed below. The revocation token ``rev-token`` is a signature under the wallet public key ``<wpk>`` on the special revocation message ``<<wpk> || REVOKED>``. The transaction posted by the merchant to dispute is denoted ``dispute-tx``.
+
+The customer and merchant may also negotiate off-chain to form a *mutual close transaction*, ``mutual-close-tx``. Off-chain collaboration to create ``mutual-close-tx`` reduces the required number of on-chain transactions and eliminates the time delays.
 
 2. Transparent/Shielded Tx: Using T/Z-addresses and WTPs
 -------------
@@ -110,21 +112,20 @@ We assume the following specific features are present:
 2.1 Bolt WTPs
 --------------
 
-Transparent programs take as input a ``predicate``, ``witness`` and ``context`` and then output a ``True`` or ``False`` on the stack. Bolt-specific transparent programs are deterministic and any malleation of the ``witness`` will result in a ``False`` output. The WTPs are as follows:
+Transparent programs take as input a ``predicate``, ``witness``, and ``context`` and then output a ``True`` or ``False`` on the stack. Bolt-specific transparent programs are deterministic and any malleation of the ``witness`` will result in a ``False`` output. The WTPs are as follows:
 
-1. ``open-channel`` program (for customer-initiated or merchant-initiated close). The purpose of this WTP is to encumber the funding transaction such that either party can spend from the transaction: (1) the customer can initiate close with a closure token (from merchant) and a customer signature, or (2) the merchant can initiate close with a customer signature and merchant signature. The program is structured as follows:
-    
-        (a) ``predicate``: the customer and merchant public keys along with the channel token (which consists of the public parameters, the initial balances and optionally, the initial wallet commitment)
-	(b) ``witness``: consists of three arguments: first argument indicates whether **the customer or merchant initiated close** and is represented by a single byte (``0x0`` or ``0x1``). The second and third argument are signatures.
-	
-	    - if the customer-initiated close, then the subsequent bytes are interpreted as a **closing token** and **customer signature**.
-	    - if the merchant-initiated close, then the subsequent bytes are interpreted as a standard multi-sig and parses signatures for the **customer** and **merchant**.
-	    
-	(c) ``context``: the number of created outputs in the transaction, time delay and etc. (TODO: flesh this out) 
-	(d) ``verify_program`` logic:
-	
-	    - if the customer-initiated closing, then verify the closing token and customer signature. In addition, the algorithm checks that 2 new outputs are created, with the specified balances, each paying a ``close-channel`` WTP containing the revocation hash and the respective pubkey.
-	    - if the merchant-initiated closing, then verify the merchant signature and customer signature. In addition, check that there is a timelock to give the customer sufficient time to dispute the transaction.
+1. ``open_channel`` program. The purpose of this WTP is to encumber the funding transaction such that either party may initiate channel closing as detailed above in Section 1.3. The program is structured as follows:
+        a. ``predicate``: The predicate consists of ``<<channel-token> <merch-close-address>>``, where ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>`` contains three public keys, one for the customer and two for the merchant, and an address ``<merch-close-address>`` for the merchant at which to receive funds from a customer-initiated close.
+        b. ``witness``: The witness is defined as follows:
+                1. ``<balance-cust> <balance-merch> <cust-sig> <merch-sig>``
+                2. ``<balance-cust> <balance-merch> <cust-sig> <wpk> <closing-token>``
+        c. ``verify_program`` behaves as follows:
+                1. If witness is of the first type, check that 2 new outputs are created, with the specified balances (unless one of the balances is zero), and that the signatures verify.
+                2. If witness is of second type, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
+                    + one paying ``<balance-merch>`` to ``<merch-close-address>`` 
+                    + one paying a cust_close WTP containing ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``  and ``<channel-token>`` 
+            
+	           Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> <wpk> <balance-cust> <balance-merch> CLOSE>``.
 
 2. ``close-channel`` program. The purpose of this WTP is to enforce a relative timelock in addition to encumbering the output of a closing transaction. The program is specified as follows:
 
