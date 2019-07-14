@@ -89,7 +89,7 @@ The customer and merchant escrow the necessary funds in a funding transaction, d
 
 A customer should be able to close the channel by posting a *closing token* ``close-token``, which is a blind signature from the merchant under ``<MERCH-PK>`` on a special closing wallet that contains ``<<cust-pk>, <wpk>, <balance-cust>, <balance-merch>, CLOSE>``. We use ``cust-close-tx`` to denote the transaction posted by the customer to initiate channel closure.
 
-A merchant should be able to close the channel by either posting a special closing transaction ``merch-close-tx`` (detailed below) or, if the customer posts an outdated version of their closing token, a signed revocation token, ``rev-token`` as detailed below. The revocation token ``rev-token`` is a signature under the wallet public key ``<wpk>`` on the special revocation message ``<<wpk> || REVOKED>``. The transaction posted by the merchant to dispute is denoted ``dispute-tx``.
+A merchant should be able to close the channel by either posting a special closing transaction ``merch-close-tx`` (detailed in Section 2.3.2) or, if the customer posts an outdated version of their closing token, a signed revocation token, ``rev-token`` as detailed below. The revocation token ``rev-token`` is a signature under the wallet public key ``<wpk>`` on the special revocation message ``<<wpk> || REVOKED>``. The transaction posted by the merchant to dispute is denoted ``dispute-tx``.
 
 The customer and merchant may also negotiate off-chain to form a *mutual close transaction*, ``mutual-close-tx``. Off-chain collaboration to create ``mutual-close-tx`` reduces the required number of on-chain transactions and eliminates the time delays.
 
@@ -129,12 +129,15 @@ Transparent programs take as input a ``predicate``, ``witness``, and ``context``
 2. ``cust-close`` program. The purpose of this WTP is to allow the customer to initiate channel closure as specified in Section 1.3. The program is specified as follows:
 
 	a. ``predicate``: ``<wallet> <channel-token>``, where
+	
 		1. ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``, and 
  		2. ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>``.
 	b. ``witness``: The witness is defined as one of the following:
+	
 		1. ``<cust-sig>``
 		2. ``<merch-sig> <address> <rev-token>``
 	c. ``verify_program`` behaves as follows:
+	
 		1. If witness is of the first type, check that ``<cust-sig>`` is valid and a relative timeout has been met
 		2. If witness is of second type, check that 1 output is created paying ``<balance-merch + balance-cust>`` to ``<address>``. Also check that ``<merch-sig>`` is a valid signature on ``<address> <rev-token>`` and that ``<rev-token>`` contains a valid signature under ``<wpk>`` on ``<<wpk> || REVOKED>``.
 
