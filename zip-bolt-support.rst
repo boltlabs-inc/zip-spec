@@ -115,6 +115,7 @@ We assume the following specific features are present:
 Transparent programs take as input a ``predicate``, ``witness``, and ``context`` and then output a ``True`` or ``False`` on the stack. Bolt-specific transparent programs are deterministic and any malleation of the ``witness`` will result in a ``False`` output. The WTPs are as follows:
 
 1. ``open-channel`` program. The purpose of this WTP is to encumber the funding transaction such that either party may initiate channel closing as detailed above in Section 1.3. The program is structured as follows:
+
 	a. ``predicate``: The predicate consists of ``<<channel-token> <merch-close-address>>``, where ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>`` contains three public keys, one for the customer and two for the merchant, and an address ``<merch-close-address>`` for the merchant at which to receive funds from a customer-initiated close.
 	
 	b. ``witness``: The witness is defined as follows:
@@ -127,7 +128,7 @@ Transparent programs take as input a ``predicate``, ``witness``, and ``context``
 		2. If witness is of second type, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
 		
 			+ one paying ``<balance-merch>`` to ``<merch-close-address>`` 
-			+ one paying a cust_close WTP containing ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``  and ``<channel-token>`` 
+			+ one paying a ``cust-close`` WTP containing ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``  and ``<channel-token>`` 
 			Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> <wpk> <balance-cust> <balance-merch> CLOSE>``.
 
 2. ``cust-close`` program. The purpose of this WTP is to allow the customer to initiate channel closure as specified in Section 1.3. The program is specified as follows:
@@ -193,15 +194,7 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 transpare
 * ``tx_out_count``: 1
 * ``tx_out``: (via a transparent program)
 
-  - ``scriptPubKey``: ``PROGRAM PUSHDATA( <open-channel> || <<channel-token> || <merch-close-addr>> )``
-
-where the ``<open-channel>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
-
-	OP_IF
-	  2 <cust-pubkey> <merch-pubkey> 2 OP_CHECKMULTISIG
-	OP_ELSE
-	  <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT
-	OP_ENDIF
+  - ``scriptPubKey``: ``PROGRAM PUSHDATA( <open-channel> || <<channel-token> || <merch-close-address>> )``
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
 
@@ -222,17 +215,19 @@ The customer's closing transaction is described below.
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <open-channel> || <<customer> || <close-token> || <cust-sig>> )``
+   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <open-channel> || <<balance-cust> || <balance-merch> || <cust-sig> || <wpk> || <closing-token>> )``
 
 * ``txout`` count: 2
 * ``txouts``:
 
   * ``to_customer``: a timelocked WTP output sending funds back to the customer with a time delay.
+  
       - ``amount``: balance paid back to customer
       - ``nSequence: <time-delay>``
       - ``scriptPubKey``: ``PROGRAM PUSHDATA( <close-channel> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  )``
 
   * ``to_merchant``: a P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
+  
       * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
       * ``amount``: balance paid to merchant
       * ``nSequence``: 0
@@ -266,7 +261,7 @@ The merchant can create their own initial closing transaction as follows and obt
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <open-channel> || <<merchant> || <cust-sig> || <merch-sig>> )``
+   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <open-channel> || <<balance-cust> || <balance-merch> || <cust-sig> || <merch-sig>> )``
 
 * ``txout`` count: 1
 * ``txouts``:
