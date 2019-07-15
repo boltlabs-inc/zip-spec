@@ -204,7 +204,7 @@ The customer and merchant collaborate to create the customer's initial closing t
 -------------
 2.3.1 Customer-initiated channel closing.
 ----
-To initiated channel closure, a customer posts the transaction ``cust-clos-tx`` that spends from ``escrow-tx`` and contains two outputs: (1) an output that can be spent immediately by the merchant and (2) a ``cust-close`` WTP output that can be spent either by the customer after a relative timeout or by the merchant with a revocation token. This approach allows the merchant to dispute if the customer posts a transaction containing a spent closing token (i.e., a closing token that is valid from the network's perspective but outdated from the merchant's perspective).
+To initiated channel closure, a customer posts the transaction ``cust-close-tx`` that spends from ``escrow-tx`` and contains two outputs: (1) an output that can be spent immediately by the merchant and (2) a ``cust-close`` WTP output that can be spent either by the customer after a relative timeout or by the merchant with a revocation token. This approach allows the merchant to dispute if the customer posts a transaction containing a spent closing token (i.e., a closing token that is valid from the network's perspective but outdated from the merchant's perspective).
 
 The transaction ``cust-close-tx`` is as follows:
 
@@ -319,11 +319,6 @@ The customer and merchant can alternatively collaborate off-chain to create a mu
   * ``to_customer``: an output paying ``<balance-cust>``
   * ``to_merchant``: an output paying ``<balance-merch>``
      
-
-Rationale
----------
-
-TODO: include a section explaining how any potential sources of malleability are handled.
 
 Reference Implementation
 ========================
