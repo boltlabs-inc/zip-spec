@@ -224,7 +224,7 @@ The customer's closing transaction is described below.
   
       - ``amount``: balance paid back to customer
       - ``nSequence: <time-delay>``
-      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <close-channel> || <<cust-pubkey> || <merch-pubkey> || <revocation-pubkey>>  )``
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <cust-close> || <<channel-token> || <revocation-pubkey>>  )``
 
   * ``to_merchant``: a P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
   
@@ -234,21 +234,15 @@ The customer's closing transaction is described below.
 
 To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with the customer signature after a time delay as follows:
 
-	``PROGRAM PUSHDATA( <close-channel> || <<customer> || <cust-sig> || <block-height>> )``
+	``PROGRAM PUSHDATA( <cust-close> || <<0x0> || <cust-sig> || <block-height>> )``
 
-where the ``witness`` consists of a first byte ``0x0`` to indicate customer spend followed by the customer signature and the current block height (used to ensure that timeout reached) and where the ``<cust-close>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
-
-	``OP_IF``
-	  ``<revocation-pubkey> <merch-pubkey> 2 OP_BOLT``
-	``OP_ELSE``
-	  ``<time-delay> OP_CSV OP_DROP <cust-pubkey> OP_CHECKSIGVERIFY``
-	``OP_ENDIF``
+where the ``witness`` consists of a first byte ``0x0`` to indicate the customer followed by the customer signature and the current block height (used to ensure that timeout reached). 
 
 If the customer posted an outdated closing token, the merchant can redeem the ``to_customer`` output by posting a transaction with the following ``scriptSig``:
 
-	``PROGRAM PUSHDATA( <close-channel> || <<merchant> || <merch-sig> || <revocation-token>> )``
+	``PROGRAM PUSHDATA( <cust-close> || <<0x1> || <merch-sig> || <revocation-token>> )``
 
-where the ``witness`` consists of a first byte ``0x1`` to indicate merchant spend followed by the merchant signature and the revocation token.
+where the ``witness`` consists of a first byte ``0x1`` to indicate merchant followed by the merchant signature and the revocation token.
 
 2.3.2 Merchant closing transaction
 ----
@@ -267,9 +261,10 @@ The merchant can create their own initial closing transaction as follows and obt
 * ``txouts``:
 
   * ``to_merchant``: a timelocked WTP output sending all the funds in the channel back to the merchant with a time delay
+  
       - ``amount``: full balance paid back to merchant
       - ``nSequence: <time-delay>``
-      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <close-channel> || <<merch-pubkey> || <cust-pubkey>> )``
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <merch-close> || <<channel-token> || <merch-close-address>> )``
 
 where the ``<close-channel>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
 
@@ -281,7 +276,7 @@ where the ``<close-channel>`` type corresponds to the following logic (expressed
 
 After each payment on the channel, the customer obtains a closing token for the updated channel balance and provides the merchant a revocation token for the previous state along with the associated wallet public key (this invalidates the pub key). If the customer initiated closing, the merchant can use the revocation token to spend the funds of the channel if the customer posts an outdated closing transaction.
 
-2.4 Channel Closing
+2.4 Channel Closing (REWRITE)
 -------------
 To close the channel, the customer can initiate by posting the most recent closing transaction that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode in mode 1. This consists of a closing token (i.e., merchant signature on the wallet state) or an opening of the initial wallet commitment (if there were no payments on the channel).
 
