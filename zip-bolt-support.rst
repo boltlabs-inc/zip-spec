@@ -7,7 +7,7 @@
   Credits: Ian Miers <imiers@z.cash>
            Matthew Green <mgreen@z.cash>
   Category: Consensus
-  Created: 2019-07-04
+  Created: 2019-07-15
   License: MIT
 
 
@@ -76,7 +76,7 @@ After each payment, the customer receives an updated wallet and blind signatures
 
 1.2 Opening a Channel: Overview
 -------------
-To open a channel, the customer and merchant exchange key information and set the channel token ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>``. 
+To open a channel, the customer and merchant exchange key information and set the channel token ``<channel-token> = <cust-pk>, <merch-pk>, <MERCH-PK>``. 
 
 They agree on their respective initial balances ``initial-cust-balance`` and ``initial-merch-balance``.
 
@@ -323,7 +323,7 @@ The customer and merchant can alternatively collaborate off-chain to create a mu
 Reference Implementation
 ========================
 
-We are currently working on a reference implementation based on section 2 in a fork of Zcash here: https://github.com/boltlabs-inc/zcash.
+TBD
 
 References
 ==========
