@@ -146,7 +146,7 @@ Transparent programs take as input a ``predicate``, ``witness``, and ``context``
 		1. If witness is of the first type, check that ``<cust-sig>`` is valid and a relative timeout has been met
 		2. If witness is of second type, check that 1 output is created paying ``<balance-merch + balance-cust>`` to ``<address>``. Also check that ``<merch-sig>`` is a valid signature on ``<address> <rev-token>`` and that ``<rev-token>`` contains a valid signature under ``<wpk>`` on ``<<wpk> || REVOKED>``.
 
-3. ``merch-close``. The purpose of this WTP is to allow a merchant to initiate channel closure as specified in Section 1.3.
+3. ``merch-close``. The purpose of this WTP is to allow a merchant to initiate channel closure as specified in Section 1.3. The program is specified as follows:
 
 	a. ``predicate``: ``<channel-token> <merch-close-address>``.
 	b. ``witness`` is defined as one of the following:
@@ -155,7 +155,7 @@ Transparent programs take as input a ``predicate``, ``witness``, and ``context``
 		2. ``<cust-sig> <<wpk> <balance-cust> <balance-merch>> <closing-token>``
 		3. ``verify_program`` behaves as follows:
 		
-			1. If witness is of the first type, check that <merch-sig> is valid and a relative timeout has been met
+			1. If witness is of the first type, check that ``<merch-sig>`` is valid and a relative timeout has been met
 			2. If witness is of second type, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
 			
 				+ one paying ``<balance-merch>`` to ``<merch-close-address>`` 
@@ -228,7 +228,7 @@ The customer's closing transaction is described below.
 
   * ``to_merchant``: a P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
   
-      * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-pubkey>``
+      * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-close-address>``
       * ``amount``: balance paid to merchant
       * ``nSequence``: 0
 
