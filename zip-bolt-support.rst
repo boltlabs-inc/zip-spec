@@ -89,7 +89,7 @@ The customer and merchant escrow the necessary funds in a funding transaction, d
 
 A customer should be able to close the channel by posting a *closing token* ``close-token``, which is a blind signature from the merchant under ``<MERCH-PK>`` on a special closing wallet that contains ``<<cust-pk>, <wpk>, <balance-cust>, <balance-merch>, CLOSE>``. We use ``cust-close-tx`` to denote the transaction posted by the customer to initiate channel closure.
 
-A merchant should be able to close the channel by either posting a special closing transaction ``merch-close-tx`` (detailed in Section 2.3.2) or, if the customer posts an outdated version of their closing token, a signed revocation token, ``rev-token`` as detailed below. The revocation token ``rev-token`` is a signature under the wallet public key ``<wpk>`` on the special revocation message ``<<wpk> || REVOKED>``. The transaction posted by the merchant to dispute is denoted ``dispute-tx``.
+A merchant should be able to close the channel by either posting a special closing transaction ``merch-close-tx`` (detailed in Section 2.3.2) or, if the customer posts an outdated version of their closing token, a signed revocation token, ``revocation-token`` as detailed below. The revocation token ``revocation-token`` is a signature under the wallet public key ``<wpk>`` on the special revocation message ``<<wpk> || REVOKED>``. The transaction posted by the merchant to dispute is denoted ``dispute-tx``.
 
 The customer and merchant may also negotiate off-chain to form a *mutual close transaction*, ``mutual-close-tx``. Off-chain collaboration to create ``mutual-close-tx`` reduces the required number of on-chain transactions and eliminates the time delays.
 
@@ -128,23 +128,23 @@ Transparent programs take as input a ``predicate``, ``witness``, and ``context``
 		2. If witness is of second type, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
 		
 			+ one paying ``<balance-merch>`` to ``<merch-close-address>`` 
-			+ one paying a ``cust-close`` WTP containing ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``  and ``<channel-token>`` 
+			+ one paying a ``cust-close`` WTP containing ``<channel-token>`` and ``<wallet> = <<wpk> <balance-cust> <balance-merch>>`` 
 			Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> <wpk> <balance-cust> <balance-merch> CLOSE>``.
 
 2. ``cust-close`` program. The purpose of this WTP is to allow the customer to initiate channel closure as specified in Section 1.3. The program is specified as follows:
 
-	a. ``predicate``: ``<wallet> <channel-token>``, where
+	a. ``predicate``: ``<<channel-token> || <wallet>> ``, where
 	
-		1. ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``, and 
- 		2. ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>``.
+		1. ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>``, and
+		2. ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``.
 	b. ``witness``: The witness is defined as one of the following:
 	
 		1. ``<cust-sig>``
-		2. ``<merch-sig> <address> <rev-token>``
+		2. ``<merch-sig> <address> <revocation-token>``
 	c. ``verify_program`` behaves as follows:
 	
 		1. If witness is of the first type, check that ``<cust-sig>`` is valid and a relative timeout has been met
-		2. If witness is of second type, check that 1 output is created paying ``<balance-merch + balance-cust>`` to ``<address>``. Also check that ``<merch-sig>`` is a valid signature on ``<address> <rev-token>`` and that ``<rev-token>`` contains a valid signature under ``<wpk>`` on ``<<wpk> || REVOKED>``.
+		2. If witness is of second type, check that 1 output is created paying ``<balance-merch + balance-cust>`` to ``<address>``. Also check that ``<merch-sig>`` is a valid signature on ``<address> <revocation-token>`` and that ``<revocation-token>`` contains a valid signature under ``<wpk>`` on ``<<wpk> || REVOKED>``.
 
 3. ``merch-close``. The purpose of this WTP is to allow a merchant to initiate channel closure as specified in Section 1.3. The program is specified as follows:
 
@@ -164,11 +164,9 @@ Transparent programs take as input a ``predicate``, ``witness``, and ``context``
 				Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> <wpk> <balance-cust> <balance-merch> CLOSE>``.
 
 
-2.2 Funding Transaction
+2.2 Channel establishment and Funding Transaction
 -------------
-The funding transaction is by default funded by only one participant, the customer. We will be extending the protocol to allow for dual-funded channels.
-
-This transaction has 2 shielded inputs (but can be up to some N) and 1 transparent output with a WTP and the predicate is the customer and merchant public keys. Note that the customer can specify as many shielded inputs as necessary to fund the channel sufficiently (limited only by the overall transaction size).
+The funding transaction ``escrow-tx`` by default has 2 shielded inputs (but can be up to some N) and an ``open-channel`` WTP output with predicate ``<<channel-token> <merch-close-address>>``. 
 
 * ``lock_time``: 0
 * ``nExpiryHeight``: 0
@@ -198,15 +196,15 @@ This transaction has 2 shielded inputs (but can be up to some N) and 1 transpare
 
 * ``bindingSig``: a signature that proves that (1) the total value spent by Spend transfers - Output transfers = value balance field.
 
-The customer (in collaboration with the merchant) creates their initial closing transaction before sending the funding transaction to the network (since  the customer needs to know they can get their money back). Once both customer and merchant closing transactions have been created, the customer should broadcast the funding transaction and waits for the network to confirm the transaction. After the transaction has been confirmed, the payment channel is established.
+The customer and merchant collaborate to create the customer's initial closing token ``closing-token`` and the merchant closing transaction ``merch-close-tx`` before signing and sending ``escrow-tx`` to the network. Once the transaction has been confirmed, the payment channel is established.
 
-2.3 Closing Transactions
+2.3 Channel Closing
 -------------
-2.3.1 Customer closing transaction
+2.3.1 Customer-initiated channel closing.
 ----
-The customer closing transaction is generated by the customer during the channel establishment but is not broadcast to the network. The customer's closing transaction (below) contains two outputs: (1) an output that can be spent immediately by the merchant and (2) another output that can be spent by either the customer after a relative timeout or the merchant with a revocation token. This approach allows the merchant to see the customer's closing transaction and spend the output with a revocation token if the customer posted an outdated closure token.
+To initiated channel closure, a customer posts the transaction ``cust-clos-tx`` that spends from ``escrow-tx`` and contains two outputs: (1) an output that can be spent immediately by the merchant and (2) a ``cust-close`` WTP output that can be spent either by the customer after a relative timeout or by the merchant with a revocation token. This approach allows the merchant to dispute if the customer posts a transaction containing a spent closing token (i.e., a closing token that is valid from the network's perspective but outdated from the merchant's perspective).
 
-The customer's closing transaction is described below.
+The transaction ``cust-close-tx`` is as follows:
 
 * ``version``: specify version number
 * ``groupid``: specify group id
@@ -215,38 +213,38 @@ The customer's closing transaction is described below.
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <open-channel> || <<balance-cust> || <balance-merch> || <cust-sig> || <wpk> || <closing-token>> )``
+   - ``txin[0]`` scriptSig: ``PROGRAM PUSHDATA( <open-channel> || <<balance-cust> || <balance-merch> || <cust-sig> || <wpk> || <closing-token>> )``
 
 * ``txout`` count: 2
 * ``txouts``:
 
-  * ``to_customer``: a timelocked WTP output sending funds back to the customer with a time delay.
+  * ``to_customer``: a ``cust-close`` WTP output.
   
-      - ``amount``: balance paid back to customer
+      - ``amount``: ``<balance-cust>``
       - ``nSequence: <time-delay>``
-      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <cust-close> || <<channel-token> || <revocation-pubkey>>  )``
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <cust-close> || <<channel-token> || <wallet>>  )``
 
-  * ``to_merchant``: a P2PKH to merch-pubkey output (sending funds back to the merchant), i.e.
+  * ``to_merchant``: a P2PKH output sending funds to the merchant, i.e.
   
       * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-close-address>``
-      * ``amount``: balance paid to merchant
+      * ``amount``: ``<balance-merch>``
       * ``nSequence``: 0
 
-To redeem the ``to_customer`` output, the customer presents a ``scriptSig`` with the customer signature after a time delay as follows:
+To redeem the ``to_customer`` output, the customer posts a secondary closing transaction after the appropriate time delay with the following ``scriptSig``:
 
 	``PROGRAM PUSHDATA( <cust-close> || <<0x0> || <cust-sig> || <block-height>> )``
 
 where the ``witness`` consists of a first byte ``0x0`` to indicate the customer followed by the customer signature and the current block height (used to ensure that timeout reached). 
 
-If the customer posted an outdated closing token, the merchant can redeem the ``to_customer`` output by posting a transaction with the following ``scriptSig``:
+If the customer posts a spent closing token, the merchant can dispute and redeem the ``to_customer`` output by posting a transaction ``dispute-tx`` that spends from ``cust-close-tx`` with the following ``scriptSig``:
 
 	``PROGRAM PUSHDATA( <cust-close> || <<0x1> || <merch-sig> || <revocation-token>> )``
 
 where the ``witness`` consists of a first byte ``0x1`` to indicate the merchant followed by the merchant signature and the revocation token.
 
-2.3.2 Merchant closing transaction
+2.3.2 Merchant-initiated channel closure
 ----
-The merchant can create their own initial closing transaction and obtain the customer signature during the channel establishment phase.
+To initiate channel closure, the merchant posts the following transaction ``merch-close-tx`` (formed and signed during channel establishment) that spends from ``escrow-tx``:
 
 * ``version``: specify version number
 * ``groupid``: specify group id
@@ -260,13 +258,13 @@ The merchant can create their own initial closing transaction and obtain the cus
 * ``txout`` count: 1
 * ``txouts``:
 
-  * ``to_merchant``: a timelocked WTP output sending all the funds in the channel back to the merchant with a time delay
+  * ``to_merchant``: a ``merch-close`` WTP output.
   
-      - ``amount``: full balance paid back to merchant
+      - ``amount``: sum of ``<balance-cust>`` and ``<balance-merch>``
       - ``nSequence: <time-delay>``
       - ``scriptPubKey``: ``PROGRAM PUSHDATA( <merch-close> || <<channel-token> || <merch-close-address>> )``
 
-After each payment on the channel, the customer obtains a closing token for the updated channel balance and provides the merchant a revocation token for the previous state along with the associated wallet public key (this invalidates the pub key). If the customer initiated closing, the merchant can use the revocation token to spend the claimed funds if the customer posts an outdated closing transaction.
+(FINISH ME)
 
 2.4 Channel Closing (REWRITE)
 -------------
