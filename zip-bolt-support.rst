@@ -87,9 +87,9 @@ The customer and merchant escrow the necessary funds in a funding transaction, d
 1.3 Closing a Channel: Overview
 -------------
 
-A customer should be able to close the channel by posting a *closing token* ``close-token``, which is a blind signature from the merchant under ``<MERCH-PK>`` on a special closing wallet that contains ``<<cust-pk>, <wpk>, <balance-cust>, <balance-merch>, CLOSE>``. We use ``cust-close-tx`` to denote the transaction posted by the customer to initiate channel closure.
+A customer should be able to close the channel by posting a *closing token* ``close-token``, which is a blind signature from the merchant under ``<MERCH-PK>`` on a special closing wallet that contains ``<cust-pk>, <wpk>, <balance-cust>, <balance-merch>, CLOSE``. We use ``cust-close-tx`` to denote the transaction posted by the customer to initiate channel closure.
 
-A merchant should be able to close the channel by either posting a special closing transaction ``merch-close-tx`` (detailed in Section 2.3.2) or, if the customer posts an outdated version of their closing token, a signed revocation token, ``revocation-token`` as detailed below. The revocation token ``revocation-token`` is a signature under the wallet public key ``<wpk>`` on the special revocation message ``<<wpk> || REVOKED>``. The transaction posted by the merchant to dispute is denoted ``dispute-tx``.
+A merchant should be able to close the channel by either posting a special closing transaction ``merch-close-tx`` (detailed in Section 2.3.2) or, if the customer posts an outdated version of their closing token, a signed revocation token, ``revocation-token`` as detailed below. The revocation token ``revocation-token`` is a signature under the wallet public key ``<wpk>`` on the special revocation message ``<wpk> || REVOKED``. The transaction posted by the merchant to dispute is denoted ``dispute-tx``.
 
 The customer and merchant may also negotiate off-chain to form a *mutual close transaction*, ``mutual-close-tx``. Off-chain collaboration to create ``mutual-close-tx`` reduces the required number of on-chain transactions and eliminates the time delays.
 
@@ -103,7 +103,7 @@ We assume the following specific features are present:
 (3) Can specify relative lock time in transparent program
 (4) Can specify shielded inputs and outputs
 (5) A non-SegWit approach that fixes transaction malleability
-(6) ``OP_BOLT`` logic expressed as WTPs. We will use the Bolt WTPs defined in section 2.1: ``open-channel``, ``cust-close``, and ``merch-close``.
+(6) ``OP_BOLT`` logic expressed as WTPs. We will use the Bolt WTPs defined in Section 2.1: ``open-channel``, ``cust-close``, and ``merch-close``.
 
 **Privacy Limitations**. The aggregate balance of the channel will be revealed in the funding transaction ``escrow-tx``. Similarly, the final splitting of funds will be revealed to the network. However, for channel opening and closing, the identity of the participants remains hidden. Channel opening and closing will also be distinguishable on the network due to use of WTPs.
 
