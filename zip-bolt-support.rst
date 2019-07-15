@@ -116,52 +116,54 @@ Transparent programs take as input a ``predicate``, ``witness``, and ``context``
 
 1. ``open-channel`` program. The purpose of this WTP is to encumber the funding transaction such that either party may initiate channel closing as detailed above in Section 1.3. The program is structured as follows:
 
-	a. ``predicate``: The predicate consists of ``<<channel-token> <merch-close-address>>``, where ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>`` contains three public keys, one for the customer and two for the merchant, and an address ``<merch-close-address>`` for the merchant at which to receive funds from a customer-initiated close.
+	a. ``predicate``: The predicate consists of ``<<channel-token> || <merch-close-address>>``, where ``<channel-token> = <<cust-pk> || <merch-pk> || <MERCH-PK>>`` contains three public keys, one for the customer and two for the merchant, and an address ``<merch-close-address>`` for the merchant at which to receive funds from a customer-initiated close.
 	
-	b. ``witness``: The witness is defined as follows:
+	b. ``witness``: The witness is defined as follows, where the first byte is used to denote witness type:
 	
-		1. ``<balance-cust> <balance-merch> <cust-sig> <merch-sig>``
- 		2. ``<balance-cust> <balance-merch> <cust-sig> <wpk> <closing-token>``
- 	c. ``verify_program`` behaves as follows:
+    		1. ``<<0x0> || <balance-cust> || <balance-merch> || <cust-sig> || <merch-sig>>``
+    		2. ``<<0x1> || <balance-cust> || <balance-merch> || <cust-sig> || <wpk> || <closing-token>>``
+  	
+	c. ``verify_program`` behaves as follows:
 	
-		1. If witness is of the first type, check that 2 new outputs are created, with the specified balances (unless one of the balances is zero), and that the signatures verify.
-		2. If witness is of second type, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
+    		1. If witness is of type ``0x0``, check that 2 new outputs are created, with the specified balances (unless one of the balances is zero), and that the signatures verify.
+    		2. If witness is of type ``0x1``, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
 		
-			+ one paying ``<balance-merch>`` to ``<merch-close-address>`` 
-			+ one paying a ``cust-close`` WTP containing ``<channel-token>`` and ``<wallet> = <<wpk> <balance-cust> <balance-merch>>`` 
-			Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> <wpk> <balance-cust> <balance-merch> CLOSE>``.
+      			+ one paying ``<balance-merch>`` to ``<merch-close-address>`` 
+      			+ one paying a ``cust-close`` WTP containing ``<channel-token>`` and ``<wallet> = <<wpk> || <balance-cust> || <balance-merch>>``
+			
+      			Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> || <wpk> || <balance-cust> || <balance-merch> || CLOSE>``.
 
 2. ``cust-close`` program. The purpose of this WTP is to allow the customer to initiate channel closure as specified in Section 1.3. The program is specified as follows:
 
 	a. ``predicate``: ``<<channel-token> || <wallet>> ``, where
 	
-		1. ``<channel-token> = <<cust-pk> <merch-pk> <MERCH-PK>>``, and
-		2. ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``.
-	b. ``witness``: The witness is defined as one of the following:
+		1. ``<channel-token> = <<cust-pk> || <merch-pk> || <MERCH-PK>>``, and
+		2. ``<wallet> = <<wpk> || <balance-cust> || <balance-merch>>``.
+	b. ``witness``: The witness is defined as one of the following, where the first byte is used to denote witness type:
 	
-		1. ``<cust-sig>``
-		2. ``<merch-sig> <address> <revocation-token>``
+		1. ``<<0x0> || <cust-sig>>``
+		2. ``<<0x1> || <merch-sig> || <address> || <revocation-token>>``
 	c. ``verify_program`` behaves as follows:
 	
-		1. If witness is of the first type, check that ``<cust-sig>`` is valid and a relative timeout has been met
-		2. If witness is of second type, check that 1 output is created paying ``<balance-merch + balance-cust>`` to ``<address>``. Also check that ``<merch-sig>`` is a valid signature on ``<address> <revocation-token>`` and that ``<revocation-token>`` contains a valid signature under ``<wpk>`` on ``<<wpk> || REVOKED>``.
+		1. If witness is of type ``0x0``, check that ``<cust-sig>`` is valid and a relative timeout has been met
+		2. If witness is of type ``0x1``, check that 1 output is created paying ``<balance-merch + balance-cust>`` to ``<address>``. Also check that ``<merch-sig>`` is a valid signature on ``<<address> || <revocation-token>>`` and that ``<revocation-token>`` contains a valid signature under ``<wpk>`` on ``<<wpk> || REVOKED>``.
 
 3. ``merch-close``. The purpose of this WTP is to allow a merchant to initiate channel closure as specified in Section 1.3. The program is specified as follows:
 
-	a. ``predicate``: ``<channel-token> <merch-close-address>``.
-	b. ``witness`` is defined as one of the following:
+	a. ``predicate``: ``<<channel-token> || <merch-close-address>>``.
+	b. ``witness`` is defined as one of the following, where the first byte is used to denote witness type:
 	
-		1. ``<merch-sig>``
-		2. ``<cust-sig> <<wpk> <balance-cust> <balance-merch>> <closing-token>``
-		3. ``verify_program`` behaves as follows:
+		1. ``<<0x0> || <merch-sig>>``
+		2. ``<<0x1> || <cust-sig> || <wallet> || <closing-token>>``, where ``<wallet> = <<wpk> || <balance-cust> || <balance-merch>>``.
+	c. ``verify_program`` behaves as follows:
 		
-			1. If witness is of the first type, check that ``<merch-sig>`` is valid and a relative timeout has been met
-			2. If witness is of second type, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
+			1. If witness is of type ``0x0``, check that ``<merch-sig>`` is valid and a relative timeout has been met
+			2. If witness is of type ``0x1``, check that 2 new outputs are created (unless one of the balances is zero), with the specified balances:
 			
 				+ one paying ``<balance-merch>`` to ``<merch-close-address>`` 
- 				+ one paying a ``cust_close`` WTP containing ``<wallet> = <<wpk> <balance-cust> <balance-merch>>``  and ``<channel-token>`` 
+ 				+ one paying a ``cust_close`` WTP containing ``<wallet> = <<wpk> || <balance-cust> || <balance-merch>>``  and ``<channel-token>``. 
 				
-				Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> <wpk> <balance-cust> <balance-merch> CLOSE>``.
+				Also check that ``<cust-sig>`` is a valid signature and that ``<closing-token>`` contains a valid signature under ``<MERCH-PK>`` on ``<<cust-pk> || <wpk> || <balance-cust> || <balance-merch> || CLOSE>``.
 
 
 2.2 Channel establishment and Funding Transaction
@@ -213,7 +215,7 @@ The transaction ``cust-close-tx`` is as follows:
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` scriptSig: ``PROGRAM PUSHDATA( <open-channel> || <<balance-cust> || <balance-merch> || <cust-sig> || <wpk> || <closing-token>> )``
+   - ``txin[0]`` scriptSig: ``PROGRAM PUSHDATA( <open-channel> || <<0x1> || <balance-cust> || <balance-merch> || <cust-sig> || <wpk> || <closing-token>> )``
 
 * ``txout`` count: 2
 * ``txouts``:
@@ -234,13 +236,13 @@ To redeem the ``to_customer`` output, the customer posts a secondary closing tra
 
 	``PROGRAM PUSHDATA( <cust-close> || <<0x0> || <cust-sig> || <block-height>> )``
 
-where the ``witness`` consists of a first byte ``0x0`` to indicate the customer followed by the customer signature and the current block height (used to ensure that timeout reached). 
+where the ``witness`` consists of a first byte ``0x0`` to indicate the witness type followed by the customer signature and the current block height (used to ensure that timeout reached). 
 
 If the customer posts a spent closing token, the merchant can dispute and redeem the ``to_customer`` output by posting a transaction ``dispute-tx`` that spends from ``cust-close-tx`` with the following ``scriptSig``:
 
 	``PROGRAM PUSHDATA( <cust-close> || <<0x1> || <merch-sig> || <revocation-token>> )``
 
-where the ``witness`` consists of a first byte ``0x1`` to indicate the merchant followed by the merchant signature and the revocation token.
+where the ``witness`` consists of a first byte ``0x1`` to indicate the witness type followed by the merchant signature and the revocation token.
 
 2.3.2 Merchant-initiated channel closure
 ----
@@ -253,7 +255,7 @@ To initiate channel closure, the merchant posts the following transaction ``merc
 
    - ``txin[0]`` outpoint: references the funding transaction txid and output_index
    - ``txin[0]`` script bytes: 0
-   - ``txin[0]`` script sig: ``PROGRAM PUSHDATA( <open-channel> || <<balance-cust> || <balance-merch> || <cust-sig> || <merch-sig>> )``
+   - ``txin[0]`` scriptSig: ``PROGRAM PUSHDATA( <open-channel> || <<0x0> || <balance-cust> || <balance-merch> || <cust-sig> || <merch-sig>> )``
 
 * ``txout`` count: 1
 * ``txouts``:
@@ -264,36 +266,59 @@ To initiate channel closure, the merchant posts the following transaction ``merc
       - ``nSequence: <time-delay>``
       - ``scriptPubKey``: ``PROGRAM PUSHDATA( <merch-close> || <<channel-token> || <merch-close-address>> )``
 
-(FINISH ME)
+To spend this output, the merchant posts a secondary closing transaction after the appropriate time delay with the following ``scriptSig``:
 
-2.4 Channel Closing (REWRITE)
--------------
-To close the channel, the customer can initiate by posting the most recent closing transaction that spends from the multi-signature transparent address with inputs that satisfies the script and the ``OP_BOLT`` opcode in mode 1. This consists of a closing token (i.e., merchant signature on the wallet state) or an opening of the initial wallet commitment (if there were no payments on the channel).
+	``PROGRAM PUSHDATA( <merch-close> || <<0x0> || <merch-sig> || <block-height>> )``
 
-Once the timeout has been reached, the customer can post a transaction that claims the output of the customer closing transaction to a shielded output (see below for an example). Before the timeout, the merchant can claim the funds from the ``to_customer`` output by posting a revocation token, if they have one.
+where the ``witness`` consists of a first byte ``0x0`` to indicate witness type, followed by the merchant signature and the current block height (used to ensure that the timeout has been reached). 
 
-The merchant can immediately claim the ``to_merchant`` output from the customer closing transaction to a shielded address by presenting their P2PKH address.
+If the customer sees ``merch-close-tx`` on chain, and the current customer balance in the channel is actually non-zero, the customer should post their own closing transaction. This closing transaction is nearly identical to that specified in the customer-initiated channel closure section above and allows for merchant dispute in the same way:
 
-Because we do not know how to encumber the outputs of shielded outputs right now, we will rely on a standard transaction to move funds from the closing transaction into a shielded address as follows:
-
-* ``version``: 2
+* ``version``: specify version number
 * ``groupid``: specify group id
-* ``locktime``: 0
+* ``locktime``: should be set such that closing transactions can be included in a current block.
 * ``txin`` count: 1
-   * ``txin[0]`` outpoint: ``txid`` and ``output_index``
-   * ``txin[0]`` sequence: 0xFFFFFFFF
-   * ``txin[0]`` script bytes: 0
-   * ``txin[0]`` script sig: ``0 <cust-sig> <merch-sig>``
-* ``nShieldedOutput``: 1
-* ``vShieldedOutput[0]``:
-   - ``cv``: commitment for the output note
-   - ``cmu``: ...
-   - ``ephemeralKey``:ephemeral public key
-   - ``encCiphertext``: encrypted output note (part 1)
-   - ``outCiphertext``: encrypted output note (part 2)
-   - ``zkproof``: zero-knowledge proof for the note
 
-The merchant can initiate closing by posting the initial closing transaction from establishing the channel that pays the merchant the full balance of the channel with a time lock that allows for customer dispute. After the time delay, the merchant can then post a separate standard transaction that moves the claimed funds to a shielded address.
+   - ``txin[0]`` outpoint: references the ``merch-close-tx`` txid and output_index
+   - ``txin[0]`` script bytes: 0
+   - ``txin[0]`` scriptSig: ``PROGRAM PUSHDATA( <merch-close> || <<0x1> || <balance-cust> || <balance-merch> || <cust-sig> || <wpk> || <closing-token>> )``
+
+* ``txout`` count: 2
+* ``txouts``:
+
+  * ``to_customer``: a ``cust-close`` WTP output.
+  
+      - ``amount``: ``<balance-cust>``
+      - ``nSequence: <time-delay>``
+      - ``scriptPubKey``: ``PROGRAM PUSHDATA( <cust-close> || <<channel-token> || <wallet>>  )``
+
+  * ``to_merchant``: a P2PKH output sending funds to the merchant, i.e.
+  
+      * ``scriptPubKey``: ``0 <20-byte-key-hash of merch-close-address>``
+      * ``amount``: ``<balance-merch>``
+      * ``nSequence``: 0
+
+
+2.3.3 Mutual closing
+-------------
+The customer and merchant can alternatively collaborate off-chain to create a mutual closing transaction ``mutual-close-tx`` that spends from ``escrow-tx``. This transaction is as follows:
+
+
+* ``version``: specify version number
+* ``groupid``: specify group id
+* ``locktime``: should be set such that closing transactions can be included in a current block.
+* ``txin`` count: 1
+
+   - ``txin[0]`` outpoint: references the funding transaction txid and output_index
+   - ``txin[0]`` script bytes: 0
+   - ``txin[0]`` scriptSig: ``PROGRAM PUSHDATA( <open-channel> || <<0x0> || <balance-cust> || <balance-merch> || <cust-sig> || <merch-sig>> )``
+
+* ``txout`` count: 2
+* ``txouts``:
+
+  * ``to_customer``: an output paying ``<balance-cust>``
+  * ``to_merchant``: an output paying ``<balance-merch>``
+     
 
 Rationale
 ---------
