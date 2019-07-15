@@ -242,11 +242,11 @@ If the customer posted an outdated closing token, the merchant can redeem the ``
 
 	``PROGRAM PUSHDATA( <cust-close> || <<0x1> || <merch-sig> || <revocation-token>> )``
 
-where the ``witness`` consists of a first byte ``0x1`` to indicate merchant followed by the merchant signature and the revocation token.
+where the ``witness`` consists of a first byte ``0x1`` to indicate the merchant followed by the merchant signature and the revocation token.
 
 2.3.2 Merchant closing transaction
 ----
-The merchant can create their own initial closing transaction as follows and obtain the customer signature during the establishment phase.
+The merchant can create their own initial closing transaction and obtain the customer signature during the channel establishment phase.
 
 * ``version``: specify version number
 * ``groupid``: specify group id
@@ -266,15 +266,7 @@ The merchant can create their own initial closing transaction as follows and obt
       - ``nSequence: <time-delay>``
       - ``scriptPubKey``: ``PROGRAM PUSHDATA( <merch-close> || <<channel-token> || <merch-close-address>> )``
 
-where the ``<close-channel>`` type corresponds to the following logic (expressed in ``Script`` for convenience):
-
-		OP_IF
-	  	  <cust-pubkey> OP_CHECKSIGVERIFY 1 OP_BOLT
-		OP_ELSE
-		  <time-delay> OP_CSV OP_DROP <merch-pubkey> OP_CHECKSIGVERIFY
-		OP_ENDIF
-
-After each payment on the channel, the customer obtains a closing token for the updated channel balance and provides the merchant a revocation token for the previous state along with the associated wallet public key (this invalidates the pub key). If the customer initiated closing, the merchant can use the revocation token to spend the funds of the channel if the customer posts an outdated closing transaction.
+After each payment on the channel, the customer obtains a closing token for the updated channel balance and provides the merchant a revocation token for the previous state along with the associated wallet public key (this invalidates the pub key). If the customer initiated closing, the merchant can use the revocation token to spend the claimed funds if the customer posts an outdated closing transaction.
 
 2.4 Channel Closing (REWRITE)
 -------------
