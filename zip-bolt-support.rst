@@ -29,7 +29,7 @@ Layer 2 protocols like Lightning enable scalable payments for Bitcoin but lack t
 Specification
 =============
 
-This specification details an initial approach to integrating the features of Bolt into Zcash in a future network upgrade and depends on the WTP ZIP [#wtp-programs]_ that introduces Whitelisted Transparent Programs (WTPs).
+This specification details an initial approach to integrating the features of Bolt into Zcash in a future network upgrade and depends on the WTP ZIP [#wtp-programs]_ that introduces Whitelisted Transparent Programs (WTPs). Our prototype implementation can be found here: [#BoltWTP]_.
 
 1. General requirements for Bolt protocol
 --------------------------
@@ -324,7 +324,7 @@ The customer and merchant can alternatively collaborate off-chain to create a mu
 Reference Implementation
 ========================
 
-TBD
+.. [#BoltWTP] _`Bolt WTP implementation for Zcash <https://github.com/boltlabs-inc/librustzcash>`
 
 References
 ==========
